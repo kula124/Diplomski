@@ -4,13 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-)
 
-type OperatingMode int
-
-const (
-	Encryption OperatingMode = 0
-	Decryption OperatingMode = 1
+	types "main/src/utils"
 )
 
 type ProgramSettings struct {
@@ -21,42 +16,16 @@ type ProgramSettings struct {
 
 var Settings ProgramSettings
 
-type RequiredType int
-
-const (
-	Required   RequiredType = 0
-	RequiredOr RequiredType = 1
-	Optional   RequiredType = 2
-)
-
-func (mode OperatingMode) String() string {
-	values := [...]string{
-		"Encryption",
-		"Decryption",
-	}
-	if mode < Encryption || mode > Decryption {
-		return "Unknown" // should throw I TODO
-	}
-	return values[mode]
-}
-
-func (required RequiredType) String() string {
-	values := [...]string{
-		"Required",
-		"RequiredOr",
-		"Optional",
-	}
-	if required < Required || required > Optional {
-		return "Unknown" // should throw I TODO
-	}
-	return values[required]
-}
-
 type CommandLineArg struct {
-	name        string
+	info  CommandLineArgInfo
+	flags []CommandLineFlag
+}
+
+type CommandLineArgInfo struct {
 	defaultFlag string
 	description string
-	required    RequiredType
+	metaValue   string
+	required    types.RequiredType
 }
 
 type CommandLineFlag struct {
@@ -65,37 +34,101 @@ type CommandLineFlag struct {
 	settingsValue int
 }
 
-var cliArgs = map[CommandLineArg][]CommandLineFlag{
-	{name: "mode", description: "operation mode", required: RequiredOr}: {
-		{flag: " -e ", description: "encryption mode", settingsValue: int(Encryption)},
-		{flag: " -d ", description: "decryption mode", settingsValue: int(Decryption)},
+var cliArgs = map[string]CommandLineArg{
+	"mode": {
+		info: CommandLineArgInfo{description: "operation mode", required: types.RequiredOr},
+		flags: []CommandLineFlag{
+			{flag: "-e", description: "encryption mode", settingsValue: int(types.Encryption)},
+			{flag: "-d", description: "decryption mode", settingsValue: int(types.Decryption)},
+		},
 	},
-	{name: "key", description: "supplied key", required: Required}: {
-		{flag: " --key ", description: "key used to encrypt/decrypt, hardcoded used by default"},
+	"key": {
+		info: CommandLineArgInfo{description: "supplied key", required: types.Optional, defaultFlag: "0x645267556B58703273357638792F423F4528472B4B6250655368566D59713374"},
+		flags: []CommandLineFlag{
+			{flag: "--key", description: "key used to encrypt/decrypt, hardcoded used by default"},
+		},
 	},
-	{name: "fileFormats", description: "file formats to target", required: Optional, defaultFlag: "txt"}: {
-		{flag: " --ff ", description: "separated by | like so: jpg|png|txt"},
+	"fileFormats": {
+		info: CommandLineArgInfo{description: "file formats to target", metaValue: ",", required: types.Optional, defaultFlag: "txt"},
+		flags: []CommandLineFlag{
+			{flag: "--ff", description: "separated by | like so: jpg|png|txt"},
+		},
 	},
 }
 
-func Test() (ProgramSettings, error) {
-	fmt.Println("Hi from CLI")
-	// args := os.Args[1:]
-	// check for required
-	args := "-e --ff txt|jpeg"
-	for key, flags := range cliArgs {
-		switch req := key.required; req {
-		case RequiredOr:
-			for _, flag := range flags {
-				if strings.Contains(args, flag.flag) {
-					Settings.mode = flag.settingsValue
-					break
-				}
-				return Settings, errors.New(fmt.Sprint("Required flag not given: %v", key.name))
+func ParseCLIArgs(args []string) (ProgramSettings, error) {
+	argsString := strings.Join(args, " ")
+	// MODE-------------------------------
+	eFlag := strings.Contains(argsString, cliArgs["mode"].flags[0].flag)
+	dFlag := strings.Contains(argsString, cliArgs["mode"].flags[1].flag)
+	if (eFlag || dFlag) && (eFlag != dFlag) {
+		if eFlag {
+			Settings.mode = int(types.Encryption)
+			args = removeAtIndex(args, findStringIndex(args, cliArgs["mode"].flags[0].flag))
+		} else {
+			Settings.mode = int(types.Decryption)
+			args = removeAtIndex(args, findStringIndex(args, cliArgs["mode"].flags[1].flag))
+		}
+	} else {
+		return err("required parameter 'mode' must be -e or -d")
+	}
+
+	// KEY-------------------------------
+	kFlag := strings.Contains(argsString, cliArgs["key"].flags[0].flag)
+	if kFlag {
+		newKeyIndex := findStringIndex(args, cliArgs["key"].flags[0].flag) + 1
+		// TODO: Add key validity check!
+		if isCLIParameter(args[newKeyIndex]) {
+			return err("parameter should not start with - or --")
+		}
+		Settings.key = args[newKeyIndex]
+		args = removeAtIndex(args, newKeyIndex-1)
+		args = removeAtIndex(args, newKeyIndex-1)
+	} else {
+		Settings.key = cliArgs["key"].info.defaultFlag
+	}
+	fmt.Println(Settings.key)
+	// FILE FORMATS-----------------------
+	ffFlag := strings.Contains(argsString, cliArgs["fileFormats"].flags[0].flag)
+	if ffFlag {
+		ffIndex := findStringIndex(args, cliArgs["fileFormats"].flags[0].flag) + 1
+		if isCLIParameter(args[ffIndex]) {
+			return err("parameter should not start with - or --")
+		}
+		Settings.fileFormat = strings.Split(args[ffIndex], cliArgs["fileFormats"].info.metaValue)
+		args = removeAtIndex(args, ffIndex-1)
+		args = removeAtIndex(args, ffIndex-1)
+	} else {
+		Settings.fileFormat = []string{cliArgs["fileFormats"].info.defaultFlag}
+	}
+	if len(args) != 0 {
+		return err("Unexpected entries in command line arguments!")
+	}
+
+	return Settings, nil
+}
+
+func findStringIndex(strArr []string, target string) int {
+	c := len(strArr)
+	for i := 0; i < c; i++ {
+		if strings.Compare(target, strArr[i]) == 0 {
+			if i+1 == c {
+				return 0
 			}
-		case Required:
-			if strings.Contains(args, flag.flag) {
-				
+			return i
 		}
 	}
+	return -1
+}
+
+func removeAtIndex(strArr []string, index int) []string {
+	return append(strArr[:index], strArr[index+1:]...)
+}
+
+func isCLIParameter(str string) bool {
+	return strings.HasPrefix(str, "-")
+}
+
+func err(errMsg string) (ProgramSettings, error) {
+	return Settings, errors.New(errMsg)
 }
