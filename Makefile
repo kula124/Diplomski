@@ -1,5 +1,6 @@
 OUTPUT_FOLDER = ./bin
 MAIN_FILE = ./src/main.go
+ARGS = ""
 ifeq ($(OS),Windows_NT)
 		RM = cmd.exe /c rmdir /s /q
 		MKDIR = cmd.exe /c mkdir
@@ -17,7 +18,7 @@ build:
 	go build -o $(OUTPUT_BIN) $(MAIN_FILE)
 
 run: build
-	$(OUTPUT_BIN)
+	$(OUTPUT_BIN) $(ARGS)
 
 clean:
 	$(RM) $(CLEAN_FOLER)
