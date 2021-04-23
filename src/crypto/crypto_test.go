@@ -17,7 +17,7 @@ func TestEncryptDecrypt(t *testing.T) {
 		panic("Hex decode failed")
 	}
 	ct := Encrypt([]byte(testString), keyBytes)
-	pt := Decrypt(ct, keyBytes)
+	pt := Decrypt(ct)
 
 	if string(pt) != testString {
 		t.Error("Test string mismatch!")
@@ -46,7 +46,7 @@ func TestFileEncryptionFileName(t *testing.T) {
 	}
 
 	ct, _ := ioutil.ReadFile(newFileName)
-	pt := Decrypt(ct, keyBytes)
+	pt := Decrypt(ct)
 	if string(pt) != testString {
 		t.Error("Decryption process failed")
 	}
