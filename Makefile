@@ -14,7 +14,11 @@ else
 		CLEAN_FOLER = $(OUTPUT_FOLDER)
 endif
 
-build:
+test:
+	go test .\src\cli
+	go test .\src\crypto
+
+build: test
 	go build -o $(OUTPUT_BIN) $(MAIN_FILE)
 
 run: build
