@@ -2,7 +2,6 @@ package cli
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	types "main/src/utils"
@@ -87,7 +86,6 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 	} else {
 		Settings.key = cliArgs["key"].info.defaultFlag
 	}
-	fmt.Println(Settings.key)
 	// FILE FORMATS-----------------------
 	ffFlag := strings.Contains(argsString, cliArgs["fileFormats"].flags[0].flag)
 	if ffFlag {
