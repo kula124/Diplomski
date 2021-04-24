@@ -40,8 +40,7 @@ func Encrypt(plaintext []byte, key []byte) []byte {
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
-	ciphertextAndKey := append(ciphertext, key...)
-	return ciphertextAndKey
+	return ciphertext
 	// Save back to file
 	/*err = ioutil.WriteFile("ciphertext.bin", ciphertext, 0777)
 	if err != nil {
@@ -49,8 +48,7 @@ func Encrypt(plaintext []byte, key []byte) []byte {
 	}*/
 }
 
-func Decrypt(ctk []byte) []byte {
-	ciphertext, key := ctk[:len(ctk)-32], ctk[len(ctk)-32:]
+func Decrypt(ciphertext []byte, key []byte) []byte {
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		log.Panic(err)
