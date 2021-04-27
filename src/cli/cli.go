@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 
 	types "main/src/utils"
@@ -10,11 +11,16 @@ import (
 type ProgramSettings struct {
 	mode       int
 	key        string
+	dir        string
 	fileFormat []string
 }
 
 func (ps *ProgramSettings) GetMode() int {
 	return ps.mode
+}
+
+func (ps *ProgramSettings) GetRunningDirectory() string {
+	return ps.dir
 }
 
 func (ps *ProgramSettings) GetKey() string {
@@ -65,6 +71,12 @@ var cliArgs = map[string]CommandLineArg{
 			{flag: "--ff", description: "separated by | like so: jpg|png|txt"},
 		},
 	},
+	"dir": {
+		info: CommandLineArgInfo{description: "directory to run in", required: types.Optional, defaultFlag: "."},
+		flags: []CommandLineFlag{
+			{flag: "--dir", description: "relative or absolute dir path"},
+		},
+	},
 }
 
 func (ps *ProgramSettings) GetFileFormatsString() string {
@@ -72,10 +84,10 @@ func (ps *ProgramSettings) GetFileFormatsString() string {
 }
 
 func ParseCLIArgs(args []string) (ProgramSettings, error) {
-	argsString := strings.Join(args, " ")
+	// argsString := strings.Join(args, " ")
 	// MODE-------------------------------
-	eFlag := strings.Contains(argsString, cliArgs["mode"].flags[0].flag)
-	dFlag := strings.Contains(argsString, cliArgs["mode"].flags[1].flag)
+	eFlag := findStringIndex(args, cliArgs["mode"].flags[0].flag) != -1
+	dFlag := findStringIndex(args, cliArgs["mode"].flags[1].flag) != -1
 	if (eFlag || dFlag) && (eFlag != dFlag) {
 		if eFlag {
 			Settings.mode = int(types.Encryption)
@@ -89,7 +101,7 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 	}
 
 	// KEY-------------------------------
-	kFlag := strings.Contains(argsString, cliArgs["key"].flags[0].flag)
+	kFlag := findStringIndex(args, cliArgs["key"].flags[0].flag) != -1
 	if kFlag {
 		newKeyIndex := findStringIndex(args, cliArgs["key"].flags[0].flag) + 1
 		// TODO: Add key validity check!
@@ -103,7 +115,7 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 		Settings.key = cliArgs["key"].info.defaultFlag
 	}
 	// FILE FORMATS-----------------------
-	ffFlag := strings.Contains(argsString, cliArgs["fileFormats"].flags[0].flag)
+	ffFlag := findStringIndex(args, cliArgs["fileFormats"].flags[0].flag) != -1
 	if ffFlag {
 		ffIndex := findStringIndex(args, cliArgs["fileFormats"].flags[0].flag) + 1
 		if isCLIParameter(args[ffIndex]) {
@@ -115,6 +127,28 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 	} else {
 		Settings.fileFormat = []string{cliArgs["fileFormats"].info.defaultFlag}
 	}
+	// DIR
+	dirFlag := findStringIndex(args, cliArgs["dir"].flags[0].flag) != -1
+	if dirFlag {
+		dirIndex := findStringIndex(args, cliArgs["dir"].flags[0].flag) + 1
+		if isCLIParameter(args[dirIndex]) {
+			return err("parameter should not start with - or --")
+		}
+		d, e := filepath.Abs(args[dirIndex])
+		if e != nil {
+			return err("failed to get abs dir path")
+		}
+		Settings.dir = d
+		args = removeAtIndex(args, dirIndex-1)
+		args = removeAtIndex(args, dirIndex-1)
+	} else {
+		d, e := filepath.Abs(cliArgs["dir"].info.defaultFlag)
+		if e != nil {
+			return err("failed to get abs dir path")
+		}
+		Settings.dir = d
+	}
+
 	if len(args) != 0 {
 		return err("Unexpected entries in command line arguments!")
 	}

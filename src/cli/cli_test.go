@@ -2,6 +2,7 @@ package cli
 
 import (
 	types "main/src/utils"
+	"path/filepath"
 	"testing"
 )
 
@@ -18,6 +19,25 @@ func TestParseCLIArgsE(t *testing.T) {
 	}
 
 	t.Logf("Encryption flag set successively")
+}
+
+func TestDirFlag(t *testing.T) {
+	args := []string{"-e", "--dir", "."}
+
+	settings, err := ParseCLIArgs(args)
+	if err != nil {
+		t.Error(err)
+	}
+	if types.OperatingMode(settings.mode) != types.Encryption {
+		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.mode))
+	}
+	d, e := filepath.Abs(".")
+	if e != nil {
+		t.Error("Error getting absolute path")
+	}
+	if settings.GetRunningDirectory() != d {
+		t.Error("expected to run in ", d)
+	}
 }
 
 func TestParseCLIArgsD(t *testing.T) {
