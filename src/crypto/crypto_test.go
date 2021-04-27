@@ -52,6 +52,62 @@ func TestFileEncryptionFileName(t *testing.T) {
 	}
 }
 
+func TestDecryptFile(t *testing.T) {
+	testDir := t.TempDir()
+	fileName := testDir + "/_testFile.txt"
+	testString := "This is a test string"
+	ioutil.WriteFile(fileName, []byte(testString), 0777)
+	if _, err := os.Stat(fileName); err != nil {
+		t.Error("file not created correctly")
+		//	t.FailNow()
+	}
+	// TEST
+	key := "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
+	keyBytes, err := hex.DecodeString(key)
+	if err != nil {
+		panic("Hex decode failed")
+	}
+	newFileName, _ := EncryptFile(fileName, "", keyBytes)
+	if newFileName != testDir+"/_testFile.txt.wc" {
+		t.Error("newFileName is not correct")
+	}
+
+	fn, dErr := DecryptFile(newFileName, keyBytes)
+	if dErr != nil {
+		t.Error(dErr)
+	}
+
+	if fileName != fn {
+		t.Error("File name mismatch")
+	}
+	if p, _ := ioutil.ReadFile(fn); string(p) != testString {
+		t.Error("Decryption failed")
+	}
+}
+
+func TestDecryptFileFileNotEncrypted(t *testing.T) {
+	testDir := t.TempDir()
+	fileName := testDir + "/_testFile.txt"
+	testString := "This is a test string"
+	err := ioutil.WriteFile(fileName, []byte(testString), 0777)
+	if err != nil {
+		t.Error(err)
+	}
+	key := "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
+	keyBytes, err := hex.DecodeString(key)
+	if err != nil {
+		panic("Hex decode failed")
+	}
+	_, e := DecryptFile(fileName, keyBytes)
+	if e == nil {
+		t.Error("Error expected")
+	}
+
+	if e.Error() != "file is not encrypted" {
+		t.Error("Expected file is not encrypted error")
+	}
+}
+
 func TestGetFilesInCurrentDir(t *testing.T) {
 	testDir := t.TempDir()
 	fileName := testDir + "/_testFile"

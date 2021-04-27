@@ -1,5 +1,7 @@
 package utils
 
+import "sync"
+
 type OperatingMode int
 
 const (
@@ -15,6 +17,28 @@ const (
 	RequiredOr RequiredType = 1
 	Optional   RequiredType = 2
 )
+
+type Queue struct {
+	queue []string
+	lock  sync.Mutex
+}
+
+func (q *Queue) Push(str string) {
+	q.lock.Lock()
+	defer q.lock.Unlock()
+	q.queue = append(q.queue, str)
+}
+
+func (q *Queue) Pop() string {
+	q.lock.Lock()
+	defer q.lock.Unlock()
+	if len(q.queue) != 0 {
+		str := q.queue[0]
+		q.queue = q.queue[1:]
+		return str
+	}
+	return ""
+}
 
 func (mode OperatingMode) String() string {
 	values := [...]string{

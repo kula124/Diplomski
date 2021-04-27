@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -79,6 +80,21 @@ func EncryptFile(fileName string, newFileName string, key []byte) (newFleName st
 	chipertext := Encrypt(plaintext, key)
 	ioutil.WriteFile(newFileName, chipertext, 0777)
 	return newFileName, nil
+}
+
+func DecryptFile(encryptedFilename string, key []byte) (filename string, er error) {
+	if !strings.HasSuffix(encryptedFilename, ".wc") {
+		return "", errors.New("file is not encrypted")
+	}
+	ct, err := ioutil.ReadFile(encryptedFilename)
+	if err != nil {
+		log.Fatal(err)
+		return "", err
+	}
+	plaintext := Decrypt(ct, key)
+	filename = strings.Split(encryptedFilename, ".wc")[0]
+	ioutil.WriteFile(filename, plaintext, 0777)
+	return filename, nil
 }
 
 func GetFilesInCurrentDir(fileFormats string, dirPath string) []string {
