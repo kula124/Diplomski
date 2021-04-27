@@ -23,6 +23,10 @@ type Queue struct {
 	lock  sync.Mutex
 }
 
+func (q *Queue) Init(strArr []string) {
+	q.queue = strArr
+}
+
 func (q *Queue) Push(str string) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
