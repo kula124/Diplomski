@@ -12,8 +12,6 @@
       "program": "${fileDirname}",
       "args": [
         "-e",
-        "--key",
-        "hola",
         "--ff",
         "txt,jpg"
       ]
