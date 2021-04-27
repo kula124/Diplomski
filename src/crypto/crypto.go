@@ -1,10 +1,11 @@
-package main
+package wcc_crypto
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,7 +14,7 @@ import (
 )
 
 func Encrypt(plaintext []byte, key []byte) []byte {
-	log.Print("File encryption example")
+	// log.Print("File encryption example")
 
 	/*plaintext, err := ioutil.ReadFile("plaintext.txt")
 	if err != nil {
@@ -103,14 +104,27 @@ func GetFilesInCurrentDir(fileFormats string, dirPath string) []string {
 	if len(dirPath) == 0 {
 		dirPath = "."
 	}
-	allFiles, err := ioutil.ReadDir(dirPath)
+	absDirPath, err := filepath.Abs(dirPath)
 	if err != nil {
-		log.Fatal("failed to read directory")
+		log.Fatal("Directory path invalid")
+	}
+	fmt.Printf("Running in %v directory \n", absDirPath)
+	allFiles, err := ioutil.ReadDir(dirPath)
+	if !strings.HasSuffix(dirPath, "/") {
+		dirPath = dirPath + "/"
+	}
+	if err != nil {
+		log.Fatal("failed to read directory", dirPath)
 		return []string{}
 	}
 	for _, file := range allFiles {
 		if extInArray(ffs, filepath.Ext(file.Name())) {
-			filePaths = append(filePaths, file.Name())
+			abs, err := filepath.Abs(dirPath + file.Name())
+			if err != nil {
+				log.Fatal("failed to read full file path")
+				return []string{}
+			}
+			filePaths = append(filePaths, abs)
 		}
 	}
 	return filePaths

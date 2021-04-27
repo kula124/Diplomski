@@ -1,4 +1,4 @@
-package main
+package wcc_crypto
 
 import (
 	"encoding/hex"
