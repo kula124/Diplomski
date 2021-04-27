@@ -13,6 +13,18 @@ type ProgramSettings struct {
 	fileFormat []string
 }
 
+func (ps *ProgramSettings) GetMode() int {
+	return ps.mode
+}
+
+func (ps *ProgramSettings) GetKey() string {
+	return ps.key
+}
+
+func (ps *ProgramSettings) GetFileFormatsArray() []string {
+	return ps.fileFormat
+}
+
 var Settings ProgramSettings
 
 type CommandLineArg struct {
@@ -42,7 +54,7 @@ var cliArgs = map[string]CommandLineArg{
 		},
 	},
 	"key": {
-		info: CommandLineArgInfo{description: "supplied key", required: types.Optional, defaultFlag: "0x645267556B58703273357638792F423F4528472B4B6250655368566D59713374"},
+		info: CommandLineArgInfo{description: "supplied key", required: types.Optional, defaultFlag: "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"},
 		flags: []CommandLineFlag{
 			{flag: "--key", description: "key used to encrypt/decrypt, hardcoded used by default"},
 		},
@@ -53,6 +65,10 @@ var cliArgs = map[string]CommandLineArg{
 			{flag: "--ff", description: "separated by | like so: jpg|png|txt"},
 		},
 	},
+}
+
+func (ps *ProgramSettings) GetFileFormatsString() string {
+	return strings.Join(ps.fileFormat, cliArgs["fileFormats"].info.metaValue)
 }
 
 func ParseCLIArgs(args []string) (ProgramSettings, error) {
