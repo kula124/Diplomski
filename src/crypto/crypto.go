@@ -98,9 +98,17 @@ func DecryptFile(encryptedFilename string, key []byte) (filename string, er erro
 	return filename, nil
 }
 
-func GetFilesInCurrentDir(fileFormats string, dirPath string) []string {
+func GetFilesInCurrentDir(fileFormats string, dirPath string, recursive bool) []string {
+	filePaths := []string{}
+	if recursive {
+		subdirs := getDirectoriesInPath(dirPath)
+		if len(subdirs) != 0 {
+			for _, sd := range subdirs {
+				filePaths = append(filePaths, GetFilesInCurrentDir(fileFormats, sd, true)...)
+			}
+		}
+	}
 	ffs := strings.Split(fileFormats, ",")
-	var filePaths []string
 	if len(dirPath) == 0 {
 		dirPath = "."
 	}
@@ -138,4 +146,23 @@ func extInArray(arr []string, ext string) bool {
 		}
 	}
 	return false
+}
+
+func getDirectoriesInPath(path string) []string {
+	files, err := ioutil.ReadDir(path)
+	dirs := []string{}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			fp := filepath.Join(path, f.Name())
+			if err != nil {
+				log.Fatal(err)
+			}
+			dirs = append(dirs, fp)
+		}
+	}
+	return dirs
 }

@@ -18,7 +18,7 @@ func main() {
 		fmt.Println(fmt.Print("ERROR: %s", err))
 		os.Exit(-1)
 	}
-	files := c.GetFilesInCurrentDir(settings.GetFileFormatsString(), settings.GetRunningDirectory())
+	files := c.GetFilesInCurrentDir(settings.GetFileFormatsString(), settings.GetRunningDirectory(), settings.GetRecursion())
 	que.Init(files)
 	if settings.GetMode() == int(Encryption) {
 		StartEncryption(&que, settings.GetKey())

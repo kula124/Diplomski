@@ -13,10 +13,15 @@ type ProgramSettings struct {
 	key        string
 	dir        string
 	fileFormat []string
+	recursion  bool
 }
 
 func (ps *ProgramSettings) GetMode() int {
 	return ps.mode
+}
+
+func (ps *ProgramSettings) GetRecursion() bool {
+	return ps.recursion
 }
 
 func (ps *ProgramSettings) GetRunningDirectory() string {
@@ -57,6 +62,12 @@ var cliArgs = map[string]CommandLineArg{
 		flags: []CommandLineFlag{
 			{flag: "-e", description: "encryption mode", settingsValue: int(types.Encryption)},
 			{flag: "-d", description: "decryption mode", settingsValue: int(types.Decryption)},
+		},
+	},
+	"recursion": {
+		info: CommandLineArgInfo{description: "recursive file listing", required: types.Optional},
+		flags: []CommandLineFlag{
+			{flag: "-r", description: "use recursion", settingsValue: 1},
 		},
 	},
 	"key": {
@@ -148,7 +159,11 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 		}
 		Settings.dir = d
 	}
-
+	// Recursion
+	Settings.recursion = findStringIndex(args, cliArgs["recursion"].flags[0].flag) != -1
+	if Settings.recursion {
+		args = removeAtIndex(args, findStringIndex(args, cliArgs["recursion"].flags[0].flag))
+	}
 	if len(args) != 0 {
 		return err("Unexpected entries in command line arguments!")
 	}

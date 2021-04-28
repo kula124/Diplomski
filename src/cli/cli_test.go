@@ -40,6 +40,28 @@ func TestDirFlag(t *testing.T) {
 	}
 }
 
+func TestRecursionFlag(t *testing.T) {
+	args := []string{"-e", "--dir", ".", "-r"}
+
+	settings, err := ParseCLIArgs(args)
+	if err != nil {
+		t.Error(err)
+	}
+	if types.OperatingMode(settings.mode) != types.Encryption {
+		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.mode))
+	}
+	d, e := filepath.Abs(".")
+	if e != nil {
+		t.Error("Error getting absolute path")
+	}
+	if settings.GetRunningDirectory() != d {
+		t.Error("expected to run in ", d)
+	}
+	if !settings.GetRecursion() {
+		t.Error("expected to run in ", d)
+	}
+}
+
 func TestParseCLIArgsD(t *testing.T) {
 	// SETUP
 	args := []string{"-d"}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 )
 
@@ -138,18 +139,79 @@ func TestGetFilesInCurrentDir(t *testing.T) {
 	}
 
 	// test
-	files := GetFilesInCurrentDir("txt,doc", testDir)
+	files := GetFilesInCurrentDir("txt,doc", testDir, false)
 	if len(files) != 5 {
 		t.Error("File count mismatch")
 	}
 
-	files = GetFilesInCurrentDir("jpeg", testDir)
+	files = GetFilesInCurrentDir("jpeg", testDir, false)
 	if len(files) != c+1 {
 		t.Error("File count mismatch")
 	}
 
-	files = GetFilesInCurrentDir("jpg", testDir)
+	files = GetFilesInCurrentDir("jpg", testDir, false)
 	if len(files) != 0 {
 		t.Error("File count mismatch")
+	}
+}
+
+func TestGetFilesInCurrentDirRecursive(t *testing.T) {
+	testDir := t.TempDir()
+	fileName := testDir + "/_testFile"
+	testString := "This is a test string"
+	c := 3
+	for i := 0; i < c; i++ {
+		fullFileName := fileName + fmt.Sprint(i) + ".txt"
+		ioutil.WriteFile(fullFileName, []byte(testString), 0777)
+		if _, err := os.Stat(fullFileName); err != nil {
+			t.Error("file not created correctly")
+		}
+	}
+	recursiveDir1 := testDir + "/testRecursion1"
+	recursiveDir2 := testDir + "/testRecursion2"
+	recursiveDir3 := testDir + "/wow/this/is/sooo/deep"
+	recursiveDir4 := testDir + "/wow/this"
+	os.MkdirAll(recursiveDir1, 0777)
+	os.MkdirAll(recursiveDir2, 0777)
+	os.MkdirAll(recursiveDir3, 0777)
+	os.MkdirAll(recursiveDir4, 0777)
+	fileName = path.Join(recursiveDir1, "recursive_1_")
+	for i := 0; i < c; i++ {
+		fullFileName := fileName + fmt.Sprint(i) + ".txt"
+		ioutil.WriteFile(fullFileName, []byte(testString), 0777)
+		if _, err := os.Stat(fullFileName); err != nil {
+			t.Error("file not created correctly")
+		}
+	}
+	fileName = path.Join(recursiveDir2, "recursive_2_")
+	for i := 0; i < c; i++ {
+		fullFileName := fileName + fmt.Sprint(i) + ".txt"
+		ioutil.WriteFile(fullFileName, []byte(testString), 0777)
+		if _, err := os.Stat(fullFileName); err != nil {
+			t.Error("file not created correctly")
+		}
+	}
+
+	fileName = path.Join(recursiveDir3, "recursive_3_")
+	fullFileName := fileName + fmt.Sprint(1) + ".txt"
+	ioutil.WriteFile(fullFileName, []byte(testString), 0777)
+	if _, err := os.Stat(fullFileName); err != nil {
+		t.Error("file not created correctly")
+	}
+
+	fileName = path.Join(recursiveDir4, "recursive_4_")
+	fullFileName = fileName + fmt.Sprint(1) + ".txt"
+	ioutil.WriteFile(fullFileName, []byte(testString), 0777)
+	if _, err := os.Stat(fullFileName); err != nil {
+		t.Error("file not created correctly")
+	}
+
+	files := GetFilesInCurrentDir("txt", testDir, true)
+	if len(files) != 3*c+2 {
+		t.Error("File count mismatch")
+	}
+
+	for _, f := range files {
+		fmt.Println(f)
 	}
 }
