@@ -14,18 +14,20 @@ var que Queue
 
 func main() {
 	settings, err := cli.ParseCLIArgs(os.Args[1:])
+	wd, _ := os.Getwd()
+	fmt.Println("Running in ", wd)
 	if err != nil {
-		fmt.Println("ayy lmao")
+		fmt.Println(err)
 		os.Exit(-1)
 	}
-	switch settings.GetMode() {
+	switch settings.Mode {
 	case int(Encryption):
-		files := c.GetFilesInCurrentDir(settings.GetFileFormatsString(), settings.GetRunningDirectory(), settings.GetRecursion())
+		files := c.GetFilesInCurrentDir(settings.GetFileFormatsString(), settings.Dir, settings.Recursion)
 		que.Init(files)
-		StartEncryption(&que, settings.GetKey())
+		StartEncryption(&que, settings.Key)
 	case int(Decryption):
-		files := c.GetFilesInCurrentDir("wc", settings.GetRunningDirectory(), settings.GetRecursion())
+		files := c.GetFilesInCurrentDir("wc", settings.Dir, settings.Recursion)
 		que.Init(files)
-		StartDecryption(&que, settings.GetKey())
+		StartDecryption(&que, settings.Key)
 	}
 }

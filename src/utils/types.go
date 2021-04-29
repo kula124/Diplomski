@@ -1,13 +1,39 @@
 package utils
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 type OperatingMode int
 
+type ProgramSettings struct {
+	Mode             int
+	sep              string
+	Key              string
+	Dir              string
+	FileFormat       []string
+	ReplaceOriginal  bool
+	EncryptedFileExt string
+	Recursion        bool
+}
+
+func (ps *ProgramSettings) SetSep(s string) {
+	ps.sep = s
+}
+
+func (ps *ProgramSettings) GetSep() string {
+	return ps.sep
+}
+
+func (ps *ProgramSettings) GetFileFormatsString() string {
+	return strings.Join(ps.FileFormat, ps.sep)
+}
+
 const (
-	Encryption OperatingMode = 0
-	Decryption OperatingMode = 1
-	Unset      OperatingMode = 2
+	Unset      OperatingMode = 0
+	Encryption OperatingMode = 1
+	Decryption OperatingMode = 2
 )
 
 type RequiredType int
