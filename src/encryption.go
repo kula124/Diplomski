@@ -27,3 +27,24 @@ func StartEncryption(q *Queue, key string) int {
 	wg.Wait()
 	return 0
 }
+
+func StartDecryption(q *Queue, key string) int {
+	keyBytes, err := hex.DecodeString(key)
+	wg := new(sync.WaitGroup)
+	if err != nil {
+		panic("Hex decode failed")
+	}
+	for {
+		file := q.Pop()
+		if len(file) == 0 {
+			break
+		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			wcc.DecryptFile(file, keyBytes)
+		}()
+	}
+	wg.Wait()
+	return 0
+}
