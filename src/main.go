@@ -15,12 +15,17 @@ var que Queue
 func main() {
 	settings, err := cli.ParseCLIArgs(os.Args[1:])
 	if err != nil {
-		fmt.Println(fmt.Print("ERROR: %s", err))
+		fmt.Println("ayy lmao")
 		os.Exit(-1)
 	}
-	files := c.GetFilesInCurrentDir(settings.GetFileFormatsString(), settings.GetRunningDirectory(), settings.GetRecursion())
-	que.Init(files)
-	if settings.GetMode() == int(Encryption) {
+	switch settings.GetMode() {
+	case int(Encryption):
+		files := c.GetFilesInCurrentDir(settings.GetFileFormatsString(), settings.GetRunningDirectory(), settings.GetRecursion())
+		que.Init(files)
 		StartEncryption(&que, settings.GetKey())
+	case int(Decryption):
+		files := c.GetFilesInCurrentDir("wc", settings.GetRunningDirectory(), settings.GetRecursion())
+		que.Init(files)
+		StartDecryption(&que, settings.GetKey())
 	}
 }
