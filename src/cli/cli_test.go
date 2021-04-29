@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"main/src/utils"
 	types "main/src/utils"
 	"os"
 	"path/filepath"
@@ -160,7 +159,7 @@ func TestConfigPlusCLI(t *testing.T) {
 		t.Error("Dir")
 	}
 
-	if s.Mode != int(utils.Decryption) {
+	if s.Mode != int(types.Decryption) {
 		t.Error("Mode")
 	}
 
