@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"main/src/utils"
 	types "main/src/utils"
 )
 
@@ -97,51 +98,51 @@ func (ps *ProgramSettings) GetFileFormatsString() string {
 func ParseCLIArgs(args []string) (ProgramSettings, error) {
 	// argsString := strings.Join(args, " ")
 	// MODE-------------------------------
-	eFlag := findStringIndex(args, cliArgs["mode"].flags[0].flag) != -1
-	dFlag := findStringIndex(args, cliArgs["mode"].flags[1].flag) != -1
+	eFlag := utils.FindStringIndex(args, cliArgs["mode"].flags[0].flag) != -1
+	dFlag := utils.FindStringIndex(args, cliArgs["mode"].flags[1].flag) != -1
 	if (eFlag || dFlag) && (eFlag != dFlag) {
 		if eFlag {
 			Settings.mode = int(types.Encryption)
-			args = removeAtIndex(args, findStringIndex(args, cliArgs["mode"].flags[0].flag))
+			args = utils.RemoveAtIndex(args, utils.FindStringIndex(args, cliArgs["mode"].flags[0].flag))
 		} else {
 			Settings.mode = int(types.Decryption)
-			args = removeAtIndex(args, findStringIndex(args, cliArgs["mode"].flags[1].flag))
+			args = utils.RemoveAtIndex(args, utils.FindStringIndex(args, cliArgs["mode"].flags[1].flag))
 		}
 	} else {
 		return err("required parameter 'mode' must be -e or -d")
 	}
 
 	// KEY-------------------------------
-	kFlag := findStringIndex(args, cliArgs["key"].flags[0].flag) != -1
+	kFlag := utils.FindStringIndex(args, cliArgs["key"].flags[0].flag) != -1
 	if kFlag {
-		newKeyIndex := findStringIndex(args, cliArgs["key"].flags[0].flag) + 1
+		newKeyIndex := utils.FindStringIndex(args, cliArgs["key"].flags[0].flag) + 1
 		// TODO: Add key validity check!
 		if isCLIParameter(args[newKeyIndex]) {
 			return err("parameter should not start with - or --")
 		}
 		Settings.key = args[newKeyIndex]
-		args = removeAtIndex(args, newKeyIndex-1)
-		args = removeAtIndex(args, newKeyIndex-1)
+		args = utils.RemoveAtIndex(args, newKeyIndex-1)
+		args = utils.RemoveAtIndex(args, newKeyIndex-1)
 	} else {
 		Settings.key = cliArgs["key"].info.defaultFlag
 	}
 	// FILE FORMATS-----------------------
-	ffFlag := findStringIndex(args, cliArgs["fileFormats"].flags[0].flag) != -1
+	ffFlag := utils.FindStringIndex(args, cliArgs["fileFormats"].flags[0].flag) != -1
 	if ffFlag {
-		ffIndex := findStringIndex(args, cliArgs["fileFormats"].flags[0].flag) + 1
+		ffIndex := utils.FindStringIndex(args, cliArgs["fileFormats"].flags[0].flag) + 1
 		if isCLIParameter(args[ffIndex]) {
 			return err("parameter should not start with - or --")
 		}
 		Settings.fileFormat = strings.Split(args[ffIndex], cliArgs["fileFormats"].info.metaValue)
-		args = removeAtIndex(args, ffIndex-1)
-		args = removeAtIndex(args, ffIndex-1)
+		args = utils.RemoveAtIndex(args, ffIndex-1)
+		args = utils.RemoveAtIndex(args, ffIndex-1)
 	} else {
 		Settings.fileFormat = []string{cliArgs["fileFormats"].info.defaultFlag}
 	}
 	// DIR
-	dirFlag := findStringIndex(args, cliArgs["dir"].flags[0].flag) != -1
+	dirFlag := utils.FindStringIndex(args, cliArgs["dir"].flags[0].flag) != -1
 	if dirFlag {
-		dirIndex := findStringIndex(args, cliArgs["dir"].flags[0].flag) + 1
+		dirIndex := utils.FindStringIndex(args, cliArgs["dir"].flags[0].flag) + 1
 		if isCLIParameter(args[dirIndex]) {
 			return err("parameter should not start with - or --")
 		}
@@ -150,8 +151,8 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 			return err("failed to get abs dir path")
 		}
 		Settings.dir = d
-		args = removeAtIndex(args, dirIndex-1)
-		args = removeAtIndex(args, dirIndex-1)
+		args = utils.RemoveAtIndex(args, dirIndex-1)
+		args = utils.RemoveAtIndex(args, dirIndex-1)
 	} else {
 		d, e := filepath.Abs(cliArgs["dir"].info.defaultFlag)
 		if e != nil {
@@ -160,32 +161,15 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 		Settings.dir = d
 	}
 	// Recursion
-	Settings.recursion = findStringIndex(args, cliArgs["recursion"].flags[0].flag) != -1
+	Settings.recursion = utils.FindStringIndex(args, cliArgs["recursion"].flags[0].flag) != -1
 	if Settings.recursion {
-		args = removeAtIndex(args, findStringIndex(args, cliArgs["recursion"].flags[0].flag))
+		args = utils.RemoveAtIndex(args, utils.FindStringIndex(args, cliArgs["recursion"].flags[0].flag))
 	}
 	if len(args) != 0 {
 		return err("Unexpected entries in command line arguments!")
 	}
 
 	return Settings, nil
-}
-
-func findStringIndex(strArr []string, target string) int {
-	c := len(strArr)
-	for i := 0; i < c; i++ {
-		if strings.Compare(target, strArr[i]) == 0 {
-			if i+1 == c {
-				return 0
-			}
-			return i
-		}
-	}
-	return -1
-}
-
-func removeAtIndex(strArr []string, index int) []string {
-	return append(strArr[:index], strArr[index+1:]...)
 }
 
 func isCLIParameter(str string) bool {
