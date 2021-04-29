@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"main/src/utils"
 	types "main/src/utils"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -14,8 +16,8 @@ func TestParseCLIArgsE(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if types.OperatingMode(settings.mode) != types.Encryption {
-		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.mode))
+	if types.OperatingMode(settings.Mode) != types.Encryption {
+		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.Mode))
 	}
 
 	t.Logf("Encryption flag set successively")
@@ -28,14 +30,14 @@ func TestDirFlag(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if types.OperatingMode(settings.mode) != types.Encryption {
-		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.mode))
+	if types.OperatingMode(settings.Mode) != types.Encryption {
+		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.Mode))
 	}
 	d, e := filepath.Abs(".")
 	if e != nil {
 		t.Error("Error getting absolute path")
 	}
-	if settings.GetRunningDirectory() != d {
+	if settings.Dir != d {
 		t.Error("expected to run in ", d)
 	}
 }
@@ -47,17 +49,17 @@ func TestRecursionFlag(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if types.OperatingMode(settings.mode) != types.Encryption {
-		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.mode))
+	if types.OperatingMode(settings.Mode) != types.Encryption {
+		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.Mode))
 	}
 	d, e := filepath.Abs(".")
 	if e != nil {
 		t.Error("Error getting absolute path")
 	}
-	if settings.GetRunningDirectory() != d {
+	if settings.Dir != d {
 		t.Error("expected to run in ", d)
 	}
-	if !settings.GetRecursion() {
+	if !settings.Recursion {
 		t.Error("expected to run in ", d)
 	}
 }
@@ -70,8 +72,8 @@ func TestParseCLIArgsD(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if types.OperatingMode(settings.mode) != types.Decryption {
-		t.Errorf("Expected mode %d but got %d", types.Decryption, types.OperatingMode(settings.mode))
+	if types.OperatingMode(settings.Mode) != types.Decryption {
+		t.Errorf("Expected mode %d but got %d", types.Decryption, types.OperatingMode(settings.Mode))
 	}
 	t.Logf("Decryption flag set successively")
 	//TEARDOWN
@@ -131,4 +133,44 @@ func TestParseCLIArgsBadArgument(t *testing.T) {
 		t.Error("unexpected error occurred")
 	}
 	//TEARDOWN
+}
+
+func TestConfigPlusCLI(t *testing.T) {
+	const testJson string = `{
+		"EncryptedFileExt": "wd",
+		"Dir": "nope/",
+		"Mode": 1,
+		"Key": "10",
+		"Recursion": false,
+		"ReplaceOriginal": false
+	}`
+	testDir := t.TempDir()
+	configFile := testDir + "/test.json"
+	os.WriteFile(configFile, []byte(testJson), 0777)
+	args := []string{"-d", "--dir", ".", "-r", "--config", configFile}
+
+	s, e := ParseCLIArgs(args)
+	if e != nil {
+		t.Error(e)
+	}
+	if s.EncryptedFileExt != "wd" {
+		t.Error("wd")
+	}
+	if s.Dir == "nope/" {
+		t.Error("Dir")
+	}
+
+	if s.Mode != int(utils.Decryption) {
+		t.Error("Mode")
+	}
+
+	if len(s.Key) == 2 {
+		t.Error("Key")
+	}
+	if !s.Recursion {
+		t.Error("Recursion")
+	}
+	if s.ReplaceOriginal {
+		t.Error("Replace original")
+	}
 }

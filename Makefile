@@ -18,6 +18,7 @@ test:
 	go test .\src\cli
 	go test .\src\crypto
 	go test .\src\utils
+	go test .\src\config
 	go test .\src\
 
 build: test
