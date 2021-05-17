@@ -1,6 +1,11 @@
 package utils
 
-import "strings"
+import (
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+)
 
 func FindStringIndex(strArr []string, target string) int {
 	c := len(strArr)
@@ -17,4 +22,12 @@ func FindStringIndex(strArr []string, target string) int {
 
 func RemoveAtIndex(strArr []string, index int) []string {
 	return append(strArr[:index], strArr[index+1:]...)
+}
+
+func GetDesktopLocation() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return filepath.Join(home, "Desktop")
 }

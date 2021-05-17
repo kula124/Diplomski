@@ -9,6 +9,7 @@ type OperatingMode int
 
 type ProgramSettings struct {
 	Mode             int
+	Delete           bool
 	sep              string
 	Key              string
 	Dir              string
