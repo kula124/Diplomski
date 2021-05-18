@@ -1,7 +1,6 @@
 package config
 
 import (
-	types "main/src/utils"
 	"os"
 	"testing"
 )
@@ -9,7 +8,7 @@ import (
 const testJson string = `{
   "EncryptedFileExt": "wd",
   "Dir": ".",
-  "Mode": 1,
+  "EncryptionMode": true,
   "Key": "",
   "Recursion": true,
   "ReplaceOriginal": false
@@ -27,7 +26,7 @@ func TestReadConfig(t *testing.T) {
 		t.Error("Directory")
 	}
 
-	if ps.Mode != int(types.Encryption) {
+	if !ps.EncryptionMode {
 		t.Error("Mode")
 	}
 

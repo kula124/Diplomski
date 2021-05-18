@@ -1,7 +1,6 @@
 package cli
 
 import (
-	types "main/src/utils"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,8 +14,8 @@ func TestParseCLIArgsE(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if types.OperatingMode(settings.Mode) != types.Encryption {
-		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.Mode))
+	if !settings.EncryptionMode {
+		t.Errorf("Expected mode %v but got %v", true, false)
 	}
 
 	t.Logf("Encryption flag set successively")
@@ -29,14 +28,14 @@ func TestDirFlag(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if types.OperatingMode(settings.Mode) != types.Encryption {
-		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.Mode))
+	if !settings.EncryptionMode {
+		t.Errorf("Expected mode %v but got %v", true, false)
 	}
 	d, e := filepath.Abs(".")
 	if e != nil {
 		t.Error("Error getting absolute path")
 	}
-	if settings.Dir != d {
+	if settings.GetDir() != d {
 		t.Error("expected to run in ", d)
 	}
 }
@@ -48,14 +47,14 @@ func TestRecursionFlag(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if types.OperatingMode(settings.Mode) != types.Encryption {
-		t.Errorf("Expected mode %d but got %d", types.Encryption, types.OperatingMode(settings.Mode))
+	if !settings.EncryptionMode {
+		t.Errorf("Expected mode %v but got %v", true, false)
 	}
 	d, e := filepath.Abs(".")
 	if e != nil {
 		t.Error("Error getting absolute path")
 	}
-	if settings.Dir != d {
+	if settings.GetDir() != d {
 		t.Error("expected to run in ", d)
 	}
 	if !settings.Recursion {
@@ -65,14 +64,14 @@ func TestRecursionFlag(t *testing.T) {
 
 func TestParseCLIArgsD(t *testing.T) {
 	// SETUP
-	args := []string{"-d"}
+	args := []string{"-d", "--key", "key"}
 	// TEST
 	settings, err := ParseCLIArgs(args)
 	if err != nil {
 		t.Error(err)
 	}
-	if types.OperatingMode(settings.Mode) != types.Decryption {
-		t.Errorf("Expected mode %d but got %d", types.Decryption, types.OperatingMode(settings.Mode))
+	if settings.EncryptionMode {
+		t.Errorf("Expected mode %v but got %v", true, false)
 	}
 	t.Logf("Decryption flag set successively")
 	//TEARDOWN
@@ -80,27 +79,27 @@ func TestParseCLIArgsD(t *testing.T) {
 
 func TestParseCLIArgsUnknownArgs(t *testing.T) {
 	// SETUP
-	args := []string{"-d", "wat"}
+	args := []string{"-d", "wat", "--key", "key"}
 	// TEST
 	_, err := ParseCLIArgs(args)
 	if err == nil {
 		t.Error("error expected")
 	}
 	if err.Error() != "Unexpected entries in command line arguments!" {
-		t.Error("unexpected error occurred")
+		t.Error(err)
 	}
 	//TEARDOWN
 }
 
 func TestParseCLIArgsED(t *testing.T) {
 	// SETUP
-	args := []string{"-d", "-e"}
+	args := []string{"-e", "-d", "--key", "key"}
 	// TEST
 	_, err := ParseCLIArgs(args)
 	if err == nil {
 		t.Error("error expected")
 	}
-	if err.Error() != "required parameter 'mode' must be -e or -d" {
+	if err.Error() != "mode: only one flag is required" {
 		t.Error("unexpected error occurred")
 	}
 	//TEARDOWN
@@ -114,7 +113,7 @@ func TestParseCLIArgsMissingED(t *testing.T) {
 	if err == nil {
 		t.Error("error expected")
 	}
-	if err.Error() != "required parameter 'mode' must be -e or -d" {
+	if err.Error() != "mode: only one flag is required" {
 		t.Error("unexpected error occurred")
 	}
 	//TEARDOWN
@@ -128,9 +127,10 @@ func TestParseCLIArgsBadArgument(t *testing.T) {
 	if err == nil {
 		t.Error("error expected")
 	}
-	if err.Error() != "parameter should not start with - or --" {
+	if err.Error() != "key: missing value for parameter" {
 		t.Error("unexpected error occurred")
 	}
+
 	//TEARDOWN
 }
 
@@ -138,7 +138,7 @@ func TestConfigPlusCLI(t *testing.T) {
 	const testJson string = `{
 		"EncryptedFileExt": "wd",
 		"Dir": "nope/",
-		"Mode": 1,
+		"EncryptionMode": false,
 		"Key": "10",
 		"Recursion": false,
 		"ReplaceOriginal": false
@@ -146,7 +146,7 @@ func TestConfigPlusCLI(t *testing.T) {
 	testDir := t.TempDir()
 	configFile := testDir + "/test.json"
 	os.WriteFile(configFile, []byte(testJson), 0777)
-	args := []string{"-d", "--dir", ".", "-r", "--config", configFile}
+	args := []string{"-e", "--dir", ".", "-r", "--config", configFile}
 
 	s, e := ParseCLIArgs(args)
 	if e != nil {
@@ -155,15 +155,15 @@ func TestConfigPlusCLI(t *testing.T) {
 	if s.EncryptedFileExt != "wd" {
 		t.Error("wd")
 	}
-	if s.Dir == "nope/" {
+	if s.GetDir() == "nope/" {
 		t.Error("Dir")
 	}
 
-	if s.Mode != int(types.Decryption) {
+	if !s.EncryptionMode {
 		t.Error("Mode")
 	}
 
-	if len(s.Key) == 2 {
+	if len(s.Key) != 2 {
 		t.Error("Key")
 	}
 	if !s.Recursion {
@@ -171,5 +171,18 @@ func TestConfigPlusCLI(t *testing.T) {
 	}
 	if s.ReplaceOriginal {
 		t.Error("Replace original")
+	}
+}
+
+func TestRequiredWith(t *testing.T) {
+	// SETUP
+	args := []string{"-d", "key"}
+	// TEST
+	_, err := ParseCLIArgs(args)
+	if err == nil {
+		t.Error("error expected")
+	}
+	if err.Error() != "key: flag --key is required when using -d" {
+		t.Error("unexpected error occurred")
 	}
 }
