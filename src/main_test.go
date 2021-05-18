@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"main/src/cli"
 	wcc_crypto "main/src/crypto"
 	"main/src/utils"
 	"os"
@@ -77,6 +78,31 @@ func TestEncryptionDecryptionScheme(t *testing.T) {
 		if err != nil {
 			log.Fatal("Failed to delete the file")
 			t.Error(err)
+		}
+	}
+	var eQue utils.Queue
+	eFiles := wcc_crypto.GetFilesInCurrentDir("wc", rootDir, true)
+	eQue.Init(eFiles)
+	StartDecryption(&eQue, key)
+	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
+	for _, ff := range files {
+		if (utils.FindStringIndex(finalFiles, ff)) == -1 {
+			t.Error("Final array mismatch")
+		}
+	}
+}
+
+func TestEncryptionDecryptionSchemeWithDeletion(t *testing.T) {
+	files, rootDir := createRecursiveFileHierarchy(t)
+	var dQue utils.Queue
+	key := "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
+	dQue.Init(files)
+	cli.Settings.Delete = true
+	StartEncryption(&dQue, key)
+	for _, f := range files {
+		_, b := os.Stat(f)
+		if b == nil {
+			t.Errorf("Filed should be deleted")
 		}
 	}
 	var eQue utils.Queue

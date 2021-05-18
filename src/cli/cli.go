@@ -43,6 +43,14 @@ var cliArgs = []CommandLineArg{
 		settingsField: "EncryptionMode",
 	},
 	{
+		name: "delete",
+		info: CommandLineArgInfo{description: "delete file after encryption", isBool: true, required: Optional},
+		flags: []CommandLineFlag{
+			{flag: "-del", description: "delete files", settingsValue: true},
+		},
+		settingsField: "Delete",
+	},
+	{
 		name: "recursion",
 		info: CommandLineArgInfo{description: "recursive file listing", isBool: true, required: Optional},
 		flags: []CommandLineFlag{

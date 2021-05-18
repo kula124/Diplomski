@@ -186,3 +186,16 @@ func TestRequiredWith(t *testing.T) {
 		t.Error("unexpected error occurred")
 	}
 }
+
+func TestDeleteFlag(t *testing.T) {
+	// SETUP
+	args := []string{"-e", "-del"}
+	// TEST
+	s, err := ParseCLIArgs(args)
+	if err != nil {
+		t.Error("error expected")
+	}
+	if !s.Delete {
+		t.Error("Delete should be +true+")
+	}
+}
