@@ -13,7 +13,11 @@ import (
 var que Queue
 
 func main() {
-	settings, err := cli.ParseCLIArgs(os.Args[1:])
+	if len(os.Args) == 1 {
+		cli.PrintHelp(os.Args[0])
+		os.Exit(0)
+	}
+	settings, err := cli.ParseCLIArgs(os.Args)
 	wd, _ := os.Getwd()
 	fmt.Println("Running in ", wd)
 	if err != nil {

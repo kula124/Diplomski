@@ -15,6 +15,14 @@
         "--ff",
         "txt,jpg"
       ]
+    },
+    {
+      "name": "Debug (no args)",
+      "type": "go",
+      "mode": "debug",
+      "request": "launch",
+      "program": "${fileDirname}",
+      "args": []
     }
   ]
 }

