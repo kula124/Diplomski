@@ -20,13 +20,13 @@ func main() {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-	switch settings.Mode {
-	case int(Encryption):
-		files := c.GetFilesInCurrentDir(settings.GetFileFormatsString(), settings.Dir, settings.Recursion)
+	switch settings.EncryptionMode {
+	case true:
+		files := c.GetFilesInCurrentDir(settings.FileFormat, settings.GetDir(), settings.Recursion)
 		que.Init(files)
 		StartEncryption(&que, settings.Key)
-	case int(Decryption):
-		files := c.GetFilesInCurrentDir("wc", settings.Dir, settings.Recursion)
+	case false:
+		files := c.GetFilesInCurrentDir("wc", settings.GetDir(), settings.Recursion)
 		que.Init(files)
 		StartDecryption(&que, settings.Key)
 	}
