@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -8,15 +9,23 @@ import (
 type OperatingMode int
 
 type ProgramSettings struct {
-	Mode             int
+	EncryptionMode   bool
 	Delete           bool
 	sep              string
 	Key              string
 	Dir              string
-	FileFormat       []string
+	FileFormat       string
 	ReplaceOriginal  bool
 	EncryptedFileExt string
 	Recursion        bool
+}
+
+func (ps *ProgramSettings) GetDir() string {
+	d, e := filepath.Abs(ps.Dir)
+	if e != nil {
+		return ps.Dir
+	}
+	return d
 }
 
 func (ps *ProgramSettings) SetSep(s string) {
@@ -27,8 +36,8 @@ func (ps *ProgramSettings) GetSep() string {
 	return ps.sep
 }
 
-func (ps *ProgramSettings) GetFileFormatsString() string {
-	return strings.Join(ps.FileFormat, ps.sep)
+func (ps *ProgramSettings) GetFileFormatArray() []string {
+	return strings.Split(ps.FileFormat, ps.sep)
 }
 
 const (
@@ -40,9 +49,10 @@ const (
 type RequiredType int
 
 const (
-	Required   RequiredType = 0
-	RequiredOr RequiredType = 1
-	Optional   RequiredType = 2
+	Required     RequiredType = 0
+	RequiredOr   RequiredType = 1
+	Optional     RequiredType = 2
+	RequiredWith RequiredType = 3
 )
 
 type Queue struct {

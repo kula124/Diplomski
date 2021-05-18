@@ -2,151 +2,191 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"main/src/config"
 	. "main/src/utils"
-	"path/filepath"
+	"reflect"
+	"sort"
 	"strings"
 )
 
 type CommandLineArg struct {
-	info  CommandLineArgInfo
-	flags []CommandLineFlag
+	name          string
+	info          CommandLineArgInfo
+	flags         []CommandLineFlag
+	settingsField string
 }
 
 type CommandLineArgInfo struct {
-	defaultFlag string
-	description string
-	metaValue   string
-	required    RequiredType
+	defaultFlag  string
+	requiredWith string
+	isBool       bool
+	description  string
+	metaValue    string // additional value statickly defined
+	required     RequiredType
 }
 
 type CommandLineFlag struct {
 	flag          string
 	description   string
-	settingsValue int
+	settingsValue bool
 }
 
-var cliArgs = map[string]CommandLineArg{
-	"mode": {
-		info: CommandLineArgInfo{description: "operation mode", required: RequiredOr},
+var cliArgs = []CommandLineArg{
+	{
+		name: "mode",
+		info: CommandLineArgInfo{description: "operation mode", isBool: true, required: RequiredOr},
 		flags: []CommandLineFlag{
-			{flag: "-e", description: "encryption mode", settingsValue: int(Encryption)},
-			{flag: "-d", description: "decryption mode", settingsValue: int(Decryption)},
+			{flag: "-e", description: "encryption mode", settingsValue: true},
+			{flag: "-d", description: "decryption mode", settingsValue: false},
 		},
+		settingsField: "EncryptionMode",
 	},
-	"recursion": {
-		info: CommandLineArgInfo{description: "recursive file listing", required: Optional},
+	{
+		name: "recursion",
+		info: CommandLineArgInfo{description: "recursive file listing", isBool: true, required: Optional},
 		flags: []CommandLineFlag{
-			{flag: "-r", description: "use recursion", settingsValue: 1},
+			{flag: "-r", description: "use recursion", settingsValue: true},
 		},
+		settingsField: "Recursion",
 	},
-	"key": {
-		info: CommandLineArgInfo{description: "supplied key", required: Optional, defaultFlag: "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"},
+	{
+		name: "key",
+		info: CommandLineArgInfo{description: "supplied key", required: RequiredWith, requiredWith: "-d", isBool: false, defaultFlag: "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"},
 		flags: []CommandLineFlag{
 			{flag: "--key", description: "key used to encrypt/decrypt, hardcoded used by default"},
 		},
+		settingsField: "Key",
 	},
-	"fileFormats": {
-		info: CommandLineArgInfo{description: "file formats to target", metaValue: ",", required: Optional, defaultFlag: "txt"},
+	{
+		name: "fileFormats",
+		info: CommandLineArgInfo{description: "file formats to target", metaValue: ",", isBool: false, required: Optional, defaultFlag: "txt"},
 		flags: []CommandLineFlag{
 			{flag: "--ff", description: "separated by | like so: jpg|png|txt"},
 		},
+		settingsField: "FileFormat",
 	},
-	"dir": {
-		info: CommandLineArgInfo{description: "directory to run in", required: Optional, defaultFlag: "."},
+	{
+		name: "dir",
+		info: CommandLineArgInfo{description: "directory to run in", required: Optional, isBool: false, defaultFlag: "."},
 		flags: []CommandLineFlag{
 			{flag: "--dir", description: "relative or absolute dir path"},
 		},
+		settingsField: "Dir",
 	},
 }
 
 var Settings ProgramSettings
 
 func ParseCLIArgs(args []string) (ProgramSettings, error) {
-	// argsString := strings.Join(args, " ")
+	var er error
+	argsPtr := &args
+
 	cfi := FindStringIndex(args, "--config")
 	if cfi != -1 {
 		configFile := args[cfi+1]
 		Settings = config.GetConfig(configFile)
-		args = RemoveAtIndex(args, cfi)
-		args = RemoveAtIndex(args, cfi)
+		args = RemoveAtIndex(&argsPtr, cfi)
+		args = RemoveAtIndex(&argsPtr, cfi)
 	} else {
 		Settings = config.GetConfig("config.json")
 	}
-	Settings.SetSep(cliArgs["fileFormats"].info.metaValue)
-	// MODE-------------------------------
-	eFlag := FindStringIndex(args, cliArgs["mode"].flags[0].flag) != -1
-	dFlag := FindStringIndex(args, cliArgs["mode"].flags[1].flag) != -1
-	if (eFlag || dFlag) && (eFlag != dFlag) {
-		if eFlag {
-			Settings.Mode = int(Encryption)
-			args = RemoveAtIndex(args, FindStringIndex(args, cliArgs["mode"].flags[0].flag))
-		} else {
-			Settings.Mode = int(Decryption)
-			args = RemoveAtIndex(args, FindStringIndex(args, cliArgs["mode"].flags[1].flag))
-		}
-	} else {
-		return err("required parameter 'mode' must be -e or -d")
-	}
 
-	// KEY-------------------------------
-	kFlag := FindStringIndex(args, cliArgs["key"].flags[0].flag) != -1
-	if kFlag {
-		newKeyIndex := FindStringIndex(args, cliArgs["key"].flags[0].flag) + 1
-		// TODO: Add key validity check!
-		if isCLIParameter(args[newKeyIndex]) {
-			return err("parameter should not start with - or --")
+	sort.Slice(cliArgs, func(i, j int) bool {
+		return cliArgs[i].info.required > cliArgs[j].info.required
+	})
+
+	for _, v := range cliArgs {
+		er = parseParameter(v, &argsPtr)
+		if er != nil {
+			break
 		}
-		Settings.Key = args[newKeyIndex]
-		args = RemoveAtIndex(args, newKeyIndex-1)
-		args = RemoveAtIndex(args, newKeyIndex-1)
-	} else {
-		Settings.Key = cliArgs["key"].info.defaultFlag
 	}
-	// FILE FORMATS-----------------------
-	ffFlag := FindStringIndex(args, cliArgs["fileFormats"].flags[0].flag) != -1
-	if ffFlag {
-		ffIndex := FindStringIndex(args, cliArgs["fileFormats"].flags[0].flag) + 1
-		if isCLIParameter(args[ffIndex]) {
-			return err("parameter should not start with - or --")
-		}
-		Settings.FileFormat = strings.Split(args[ffIndex], Settings.GetSep())
-		args = RemoveAtIndex(args, ffIndex-1)
-		args = RemoveAtIndex(args, ffIndex-1)
-	} else {
-		Settings.FileFormat = []string{cliArgs["fileFormats"].info.defaultFlag}
-	}
-	// DIR
-	dirFlag := FindStringIndex(args, cliArgs["dir"].flags[0].flag) != -1
-	if dirFlag {
-		dirIndex := FindStringIndex(args, cliArgs["dir"].flags[0].flag) + 1
-		if isCLIParameter(args[dirIndex]) {
-			return err("parameter should not start with - or --")
-		}
-		d, e := filepath.Abs(args[dirIndex])
-		if e != nil {
-			return err("failed to get abs dir path")
-		}
-		Settings.Dir = d
-		args = RemoveAtIndex(args, dirIndex-1)
-		args = RemoveAtIndex(args, dirIndex-1)
-	} else {
-		d, e := filepath.Abs(cliArgs["dir"].info.defaultFlag)
-		if e != nil {
-			return err("failed to get abs dir path")
-		}
-		Settings.Dir = d
-	}
-	// Recursion
-	Settings.Recursion = FindStringIndex(args, cliArgs["recursion"].flags[0].flag) != -1
-	if Settings.Recursion {
-		args = RemoveAtIndex(args, FindStringIndex(args, cliArgs["recursion"].flags[0].flag))
-	}
-	if len(args) != 0 {
+	if er == nil && len(*argsPtr) > 0 {
 		return err("Unexpected entries in command line arguments!")
 	}
+	return Settings, er
+}
 
-	return Settings, nil
+func parseParameter(v CommandLineArg, argsPtr **[]string) error {
+	// check if required
+	required := v.info.required
+	var multiFlagIndex int
+	args := **argsPtr
+	// flagIndex := FindStringIndex(args, v.flags[0].flag)
+	flagIndex, multiFlagIndex := findOneOfFlags(args, v)
+	switch required {
+	case Required:
+		if flagIndex == -1 {
+			return errors.New(v.name + " is required!")
+		}
+		if len(v.flags) > 1 {
+			return errors.New(v.name + " can't require multiple flags in one key")
+		}
+		return nil
+	case RequiredOr:
+		if flagIndex == -1 {
+			return errors.New(v.name + ": only one flag is required")
+		}
+	case RequiredWith:
+		if len(v.flags) > 1 {
+			return errors.New(v.name + ": can't require multiple flags in one key")
+		}
+		flagRIndex := FindStringIndex(args, v.info.requiredWith)
+		if flagRIndex > -1 && flagIndex == -1 {
+			return fmt.Errorf("%s: flag %s is required when using %s", v.name, v.flags[0].flag, v.info.requiredWith)
+		}
+		if flagIndex == -1 {
+			break
+		}
+	case Optional:
+		break
+	}
+	var bValue bool
+	var sValue string
+	if v.info.isBool {
+		if flagIndex == -1 {
+			bValue = !v.flags[multiFlagIndex].settingsValue
+		} else {
+			bValue = v.flags[multiFlagIndex].settingsValue
+			RemoveAtIndex(argsPtr, flagIndex)
+		}
+		reflect.ValueOf(&Settings).Elem().FieldByName(v.settingsField).SetBool(bValue)
+		return nil
+	} else {
+		if flagIndex == -1 {
+		} else {
+			if flagIndex+1 <= len(args) {
+				sValue = args[flagIndex+1]
+				if !isCLIParameter(sValue) {
+					RemoveAtIndex(argsPtr, flagIndex)
+					RemoveAtIndex(argsPtr, flagIndex)
+					reflect.ValueOf(&Settings).Elem().FieldByName(v.settingsField).SetString(sValue)
+					return nil
+				}
+			}
+			return errors.New(v.name + ": missing value for parameter")
+		}
+	}
+	return nil
+}
+
+func findOneOfFlags(args []string, v CommandLineArg) (int, int) {
+	count := 0
+
+	var index, flagIndex int
+	for i := 0; i < len(v.flags); i++ {
+		ix := FindStringIndex(args, v.flags[i].flag)
+		if ix != -1 {
+			index = ix
+			count++
+			flagIndex = i
+		}
+	}
+	if count > 1 || count == 0 {
+		return -1, 0
+	}
+	return index, flagIndex
 }
 
 func isCLIParameter(str string) bool {
