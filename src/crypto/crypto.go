@@ -1,9 +1,11 @@
-package main
+package wcc_crypto
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,7 +14,7 @@ import (
 )
 
 func Encrypt(plaintext []byte, key []byte) []byte {
-	log.Print("File encryption example")
+	// log.Print("File encryption example")
 
 	/*plaintext, err := ioutil.ReadFile("plaintext.txt")
 	if err != nil {
@@ -40,8 +42,7 @@ func Encrypt(plaintext []byte, key []byte) []byte {
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
-	ciphertextAndKey := append(ciphertext, key...)
-	return ciphertextAndKey
+	return ciphertext
 	// Save back to file
 	/*err = ioutil.WriteFile("ciphertext.bin", ciphertext, 0777)
 	if err != nil {
@@ -49,8 +50,7 @@ func Encrypt(plaintext []byte, key []byte) []byte {
 	}*/
 }
 
-func Decrypt(ctk []byte) []byte {
-	ciphertext, key := ctk[:len(ctk)-32], ctk[len(ctk)-32:]
+func Decrypt(ciphertext []byte, key []byte) []byte {
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		log.Panic(err)
@@ -83,20 +83,56 @@ func EncryptFile(fileName string, newFileName string, key []byte) (newFleName st
 	return newFileName, nil
 }
 
-func GetFilesInCurrentDir(fileFormats string, dirPath string) []string {
+func DecryptFile(encryptedFilename string, key []byte) (filename string, er error) {
+	if !strings.HasSuffix(encryptedFilename, ".wc") {
+		return "", errors.New("file is not encrypted")
+	}
+	ct, err := ioutil.ReadFile(encryptedFilename)
+	if err != nil {
+		log.Fatal(err)
+		return "", err
+	}
+	plaintext := Decrypt(ct, key)
+	filename = strings.Split(encryptedFilename, ".wc")[0]
+	ioutil.WriteFile(filename, plaintext, 0777)
+	return filename, nil
+}
+
+func GetFilesInCurrentDir(fileFormats string, dirPath string, recursive bool) []string {
+	filePaths := []string{}
+	if recursive {
+		subdirs := getDirectoriesInPath(dirPath)
+		if len(subdirs) != 0 {
+			for _, sd := range subdirs {
+				filePaths = append(filePaths, GetFilesInCurrentDir(fileFormats, sd, true)...)
+			}
+		}
+	}
 	ffs := strings.Split(fileFormats, ",")
-	var filePaths []string
 	if len(dirPath) == 0 {
 		dirPath = "."
 	}
-	allFiles, err := ioutil.ReadDir(dirPath)
+	absDirPath, err := filepath.Abs(dirPath)
 	if err != nil {
-		log.Fatal("failed to read directory")
+		log.Fatal("Directory path invalid")
+	}
+	fmt.Printf("Running in %v directory \n", absDirPath)
+	allFiles, err := ioutil.ReadDir(dirPath)
+	if !strings.HasSuffix(dirPath, "/") {
+		dirPath = dirPath + "/"
+	}
+	if err != nil {
+		log.Fatal("failed to read directory", dirPath)
 		return []string{}
 	}
 	for _, file := range allFiles {
 		if extInArray(ffs, filepath.Ext(file.Name())) {
-			filePaths = append(filePaths, file.Name())
+			abs, err := filepath.Abs(dirPath + file.Name())
+			if err != nil {
+				log.Fatal("failed to read full file path")
+				return []string{}
+			}
+			filePaths = append(filePaths, abs)
 		}
 	}
 	return filePaths
@@ -110,4 +146,23 @@ func extInArray(arr []string, ext string) bool {
 		}
 	}
 	return false
+}
+
+func getDirectoriesInPath(path string) []string {
+	files, err := ioutil.ReadDir(path)
+	dirs := []string{}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			fp := filepath.Join(path, f.Name())
+			if err != nil {
+				log.Fatal(err)
+			}
+			dirs = append(dirs, fp)
+		}
+	}
+	return dirs
 }

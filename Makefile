@@ -1,5 +1,5 @@
 OUTPUT_FOLDER = ./bin
-MAIN_FILE = ./src/main.go
+MAIN_FILE = ./src/main.go ./src/encryption.go
 ARGS = ""
 ifeq ($(OS),Windows_NT)
 		RM = cmd.exe /c rmdir /s /q
@@ -17,6 +17,9 @@ endif
 test:
 	go test .\src\cli
 	go test .\src\crypto
+	go test .\src\utils
+	go test .\src\config
+	go test .\src\
 
 build: test
 	go build -o $(OUTPUT_BIN) $(MAIN_FILE)

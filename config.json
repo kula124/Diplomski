@@ -1,0 +1,9 @@
+{
+  "encryptedFileExt": "wd",
+  "dir": ".",
+  "mode": "Encryption",
+  "Delete": false,
+  "key": false,
+  "recursion": true,
+  "replaceOriginal": false
+}
