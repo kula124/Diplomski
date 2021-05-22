@@ -18,14 +18,12 @@ type ProgramSettings struct {
 	ReplaceOriginal  bool
 	EncryptedFileExt string
 	Recursion        bool
+	LeaveNote        bool
 }
 
-func (ps *ProgramSettings) GetDir() string {
+func (ps *ProgramSettings) GetDir() (string, error) {
 	d, e := filepath.Abs(ps.Dir)
-	if e != nil {
-		return ps.Dir
-	}
-	return d
+	return d, e
 }
 
 func (ps *ProgramSettings) SetSep(s string) {

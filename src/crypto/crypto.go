@@ -100,6 +100,7 @@ func DecryptFile(encryptedFilename string, key []byte) (filename string, er erro
 
 func GetFilesInCurrentDir(fileFormats string, dirPath string, recursive bool) []string {
 	filePaths := []string{}
+	absDirPath, err := filepath.Abs(dirPath)
 	if recursive {
 		subdirs := getDirectoriesInPath(dirPath)
 		if len(subdirs) != 0 {
@@ -112,11 +113,10 @@ func GetFilesInCurrentDir(fileFormats string, dirPath string, recursive bool) []
 	if len(dirPath) == 0 {
 		dirPath = "."
 	}
-	absDirPath, err := filepath.Abs(dirPath)
 	if err != nil {
 		log.Fatal("Directory path invalid")
 	}
-	fmt.Printf("Running in %v directory \n", absDirPath)
+	fmt.Printf("Encryption in %v directory \n", absDirPath)
 	allFiles, err := ioutil.ReadDir(dirPath)
 	if !strings.HasSuffix(dirPath, "/") {
 		dirPath = dirPath + "/"

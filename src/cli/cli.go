@@ -43,6 +43,14 @@ var cliArgs = []CommandLineArg{
 		settingsField: "EncryptionMode",
 	},
 	{
+		name: "Note",
+		info: CommandLineArgInfo{description: "Should leave a ransom note behind", isBool: true, required: Optional},
+		flags: []CommandLineFlag{
+			{flag: "-note", description: "leave a note", settingsValue: true},
+		},
+		settingsField: "LeaveNote",
+	},
+	{
 		name: "Delete",
 		info: CommandLineArgInfo{description: "Delete original file after encryption?", isBool: true, required: Optional},
 		flags: []CommandLineFlag{
@@ -99,7 +107,9 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 	} else {
 		Settings = config.GetConfig("config.json")
 	}
-
+	if len(Settings.GetSep()) == 0 {
+		Settings.SetSep(",")
+	}
 	sort.Slice(cliArgs, func(i, j int) bool {
 		return cliArgs[i].info.required > cliArgs[j].info.required
 	})
@@ -111,6 +121,7 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 		}
 	}
 	if er == nil && len(*argsPtr) > 0 {
+		fmt.Println(*argsPtr)
 		return err("Unexpected entries in command line arguments!")
 	}
 	return Settings, er
@@ -161,6 +172,10 @@ func parseParameter(v CommandLineArg, argsPtr **[]string) error {
 		return nil
 	} else {
 		if flagIndex == -1 {
+			val := reflect.ValueOf(&Settings).Elem().FieldByName(v.settingsField).String()
+			if len(val) == 0 {
+				reflect.ValueOf(&Settings).Elem().FieldByName(v.settingsField).SetString(v.info.defaultFlag)
+			}
 		} else {
 			if flagIndex+1 <= len(args) {
 				sValue = args[flagIndex+1]

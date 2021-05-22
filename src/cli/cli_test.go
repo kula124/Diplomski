@@ -35,7 +35,13 @@ func TestDirFlag(t *testing.T) {
 	if e != nil {
 		t.Error("Error getting absolute path")
 	}
-	if settings.GetDir() != d {
+	sd, se := settings.GetDir()
+
+	if se != nil {
+		t.Error(se)
+	}
+
+	if sd != d {
 		t.Error("expected to run in ", d)
 	}
 }
@@ -54,7 +60,14 @@ func TestRecursionFlag(t *testing.T) {
 	if e != nil {
 		t.Error("Error getting absolute path")
 	}
-	if settings.GetDir() != d {
+
+	sd, se := settings.GetDir()
+
+	if se != nil {
+		t.Error(se)
+	}
+
+	if sd != d {
 		t.Error("expected to run in ", d)
 	}
 	if !settings.Recursion {
@@ -99,7 +112,7 @@ func TestParseCLIArgsED(t *testing.T) {
 	if err == nil {
 		t.Error("error expected")
 	}
-	if err.Error() != "mode: only one flag is required" {
+	if err.Error() != "Mode: only one flag is required" {
 		t.Error("unexpected error occurred")
 	}
 	//TEARDOWN
@@ -113,7 +126,7 @@ func TestParseCLIArgsMissingED(t *testing.T) {
 	if err == nil {
 		t.Error("error expected")
 	}
-	if err.Error() != "mode: only one flag is required" {
+	if err.Error() != "Mode: only one flag is required" {
 		t.Error("unexpected error occurred")
 	}
 	//TEARDOWN
@@ -127,7 +140,7 @@ func TestParseCLIArgsBadArgument(t *testing.T) {
 	if err == nil {
 		t.Error("error expected")
 	}
-	if err.Error() != "key: missing value for parameter" {
+	if err.Error() != "Key: missing value for parameter" {
 		t.Error("unexpected error occurred")
 	}
 
@@ -155,7 +168,8 @@ func TestConfigPlusCLI(t *testing.T) {
 	if s.EncryptedFileExt != "wd" {
 		t.Error("wd")
 	}
-	if s.GetDir() == "nope/" {
+
+	if s.Dir == "nope/" {
 		t.Error("Dir")
 	}
 
@@ -182,7 +196,7 @@ func TestRequiredWith(t *testing.T) {
 	if err == nil {
 		t.Error("error expected")
 	}
-	if err.Error() != "key: flag --key is required when using -d" {
+	if err.Error() != "Key: flag --key is required when using -d" {
 		t.Error("unexpected error occurred")
 	}
 }
@@ -197,5 +211,118 @@ func TestDeleteFlag(t *testing.T) {
 	}
 	if !s.Delete {
 		t.Error("Delete should be +true+")
+	}
+}
+
+func TestEncryptWithKey(t *testing.T) {
+	// SETUP
+	args := []string{"-e", "--key", "59703373367639792442264528482B4D6251655468576D5A7134743777217A25"}
+	// TEST
+	_, err := ParseCLIArgs(args)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestBasics(t *testing.T) {
+	// SETUP
+	args := []string{"-e", "--key", "224334343", "--dir", "C:/"}
+	// TEST
+	s, e := ParseCLIArgs(args)
+	if e != nil {
+		t.Error(e)
+	}
+	if s.Delete {
+		t.Error("Delete")
+	}
+
+	if s.LeaveNote {
+		t.Error("Leave note")
+	}
+
+	if s.GetSep() != "," {
+		t.Error("Sep")
+	}
+
+	d, e := s.GetDir()
+	if e != nil {
+		t.Error(e)
+	}
+
+	if d != "C:\\" {
+		t.Error("Dir")
+	}
+
+	if !s.EncryptionMode {
+		t.Error("Mode")
+	}
+
+	if s.FileFormat != "txt" {
+		t.Error("File Format")
+	}
+
+	if s.Key != "224334343" {
+		t.Error("Key")
+	}
+	if s.Recursion {
+		t.Error("Recursion")
+	}
+	if s.ReplaceOriginal {
+		t.Error("Replace original")
+	}
+}
+
+func TestDefaults(t *testing.T) {
+	// SETUP
+	args := []string{"-e"}
+	// TEST
+	s, e := ParseCLIArgs(args)
+	if e != nil {
+		t.Error(e)
+	} /*
+				EncryptionMode   bool
+			Delete           bool
+			sep              string
+			Key              string
+			Dir              string
+			FileFormat       string
+			ReplaceOriginal  bool
+			EncryptedFileExt string
+			Recursion        bool
+			LeaveNote        bool
+		}
+	*/
+	if s.Delete {
+		t.Error("Delete")
+	}
+
+	if s.LeaveNote {
+		t.Error("Leave note")
+	}
+
+	if s.GetSep() != "," {
+		t.Error("Sep")
+	}
+
+	if s.Dir != "." {
+		t.Error("Dir")
+	}
+
+	if !s.EncryptionMode {
+		t.Error("Mode")
+	}
+
+	if s.FileFormat != "txt" {
+		t.Error("File Format")
+	}
+
+	if len(s.Key) == 0 {
+		t.Error("Key")
+	}
+	if s.Recursion {
+		t.Error("Recursion")
+	}
+	if s.ReplaceOriginal {
+		t.Error("Replace original")
 	}
 }

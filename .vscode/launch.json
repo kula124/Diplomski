@@ -13,7 +13,9 @@
       "args": [
         "-e",
         "--ff",
-        "txt,jpg"
+        "txt,jpg",
+        "--dir",
+        "../bin"
       ]
     },
     {

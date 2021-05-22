@@ -14,6 +14,7 @@ import (
 
 func createRecursiveFileHierarchy(t *testing.T) ([]string, string) {
 	testDir := t.TempDir()
+	cli.Settings.LeaveNote = false
 	fileName := testDir + "/_testFile"
 	testString := "This is a test string"
 	c := 3

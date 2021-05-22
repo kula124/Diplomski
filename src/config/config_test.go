@@ -26,6 +26,12 @@ func TestReadConfig(t *testing.T) {
 		t.Error("Directory")
 	}
 
+	_, e := ps.GetDir()
+	if e != nil {
+		t.Log("failed to get dir")
+		t.Error(e)
+	}
+
 	if !ps.EncryptionMode {
 		t.Error("Mode")
 	}
