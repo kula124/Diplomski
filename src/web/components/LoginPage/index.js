@@ -24,7 +24,7 @@ const LoginPage = () => {
 
   return (
     <main className="h-screen bg-gray-900 w-screen flex items-center justify-center" onKeyDown={keyDown}>
-      <div className="flex flex-col bg-gray-800 justify-evenly shadow-2x1t items-center w-1/6 h-2/6">
+      <div className="flex flex-col bg-gray-800 justify-evenly shadow-2x1t items-center w-80 h-72">
         <div className="flex flex-col justify-around h-1/8 text-center text-teal">
           <span>Username</span>
           <input className="bg-gray-800 text-indigo-400 focus:outline-none border-b-2 border-teal" type="text" onChange={e => setUser(e.target.value)} value={user} />
