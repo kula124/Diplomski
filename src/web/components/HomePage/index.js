@@ -12,7 +12,7 @@ const Home = () => {
         <li className={textCss} onClick={() => { router.push('/v1') }}>
           <span>V1: Symmetric</span>
         </li>
-        <li className={textCss}>
+        <li className={textCss} onClick={() => { router.push('/v2') }}>
           V2: Public/Symmetric
       </li>
         <li className={textCss}>

@@ -18,7 +18,6 @@ const LoginPage = () => {
       .catch(err => {
         return console.error(err)
       })
-    console.log(u, session)
   }
 
 

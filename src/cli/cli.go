@@ -67,10 +67,27 @@ var cliArgs = []CommandLineArg{
 		settingsField: "Recursion",
 	},
 	{
-		name: "Key",
-		info: CommandLineArgInfo{description: "Supplied symmetric key", required: RequiredWith, requiredWith: "-d", isBool: false, defaultFlag: "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"},
+		name: "RawKey",
+		info: CommandLineArgInfo{description: "Write AES encryption key unencrypted", isBool: true, required: Optional},
 		flags: []CommandLineFlag{
-			{flag: "--key", description: "key used to encrypt/decrypt, hardcoded used by default"},
+			{flag: "-rk", description: "leave unencrypted key", settingsValue: true},
+		},
+		settingsField: "RawKey",
+	},
+	{
+		name: "Paid",
+		info: CommandLineArgInfo{description: "Decide whether to enter key as paid (demonstration purposes, false by default)", isBool: true, required: Optional},
+		flags: []CommandLineFlag{
+			{flag: "-p", description: "is paid", settingsValue: true},
+		},
+		settingsField: "PaidStatus",
+	},
+	{
+		name: "Key",
+		info: CommandLineArgInfo{description: "Supplied symmetric key", required: Optional, isBool: false,
+			defaultFlag: "2d2d2d2d2d424547494e205055424c4943204b45592d2d2d2d2d0d0a4d494942496a414e42676b71686b6947397730424151454641414f43415138414d49494243674b4341514541316c76556c47453430616430596965594271776e0d0a5467333930354b76766b56715337396d4e413846736a6b70586e42616675527870673130635454696c396c78526a396a415a59455441334261355959367949660d0a79494d38504b42714d416230726f714b495a4579624c322f49395a3361456f4b567835456757536d776a6c6f764b526f30775a717173324c61563045365a44440d0a43727638677472794e6a4a4c474e3777715879657a326748525846537972765372586e34337276446b4637395937346f6c347770724d51376d7a6c447845752f0d0a342b31374675796436485542623743654d7079354f734647646d6d3750663349575a546b544b7754766c582b2b2b4274415357617350796f78672b33596f6e390d0a304872626d523762536d59642b59685151485854352b455a774f766175674e7369394d3575526c303941642f733439416c6a66785266496e4b6d2f3169394f670d0a6f774944415141420d0a2d2d2d2d2d454e44205055424c4943204b45592d2d2d2d2d"},
+		flags: []CommandLineFlag{
+			{flag: "--key", description: "Public key of the server, hardcoded by default"},
 		},
 		settingsField: "Key",
 	},
@@ -89,6 +106,14 @@ var cliArgs = []CommandLineArg{
 			{flag: "--dir", description: "relative or absolute dir path"},
 		},
 		settingsField: "Dir",
+	},
+	{
+		name: "Decryption hash",
+		info: CommandLineArgInfo{description: "hash of decryption key", required: Optional, isBool: false, defaultFlag: ""},
+		flags: []CommandLineFlag{
+			{flag: "--dh", description: "hash"},
+		},
+		settingsField: "DecryptionHash",
 	},
 }
 

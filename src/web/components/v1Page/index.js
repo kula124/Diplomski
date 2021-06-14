@@ -9,7 +9,6 @@ const v1 = () => {
   const keyDown = async e => {
     if (e.key === "Enter") {
       const res = await api.searchByHash(search)
-      console.log(res)
       if (res) {
         return setKey(res)
       }

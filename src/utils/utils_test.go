@@ -31,3 +31,45 @@ func TestQueuePushPop(t *testing.T) {
 		t.Error("Expected empty array")
 	}
 }
+
+func TestUnmarshalJson(t *testing.T) {
+	testString := `{"status":"NOT PAID","message":"Ransom for selected key is not registered as paid at this moment"}`
+	res := unmarshalMessage(testString)
+	if len(res.Key) > 0 {
+		t.Error("key unexpected")
+	}
+	if res.Status != string(UNPAID) {
+		t.Error("Status mismatch")
+	}
+	if res.Message != "Ransom for selected key is not registered as paid at this moment" {
+		t.Error("Message mismatch")
+	}
+}
+
+func TestUnmarshalJsonPaid(t *testing.T) {
+	testString := `{"status":"PAID","key":"0000000000000000000000000000000000000000000000000000000000000000"}`
+	res := unmarshalMessage(testString)
+	if res.Key != "0000000000000000000000000000000000000000000000000000000000000000" {
+		t.Error("key mismatch")
+	}
+	if res.Status != string(PAID) {
+		t.Error("Status mismatch")
+	}
+	if len(res.Message) > 0 {
+		t.Error("Message unexpected")
+	}
+}
+
+func TestUnmarshalJsonFailed(t *testing.T) {
+	testString := `{aaaaaaa}`
+	res := unmarshalMessage(testString)
+	if len(res.Key) > 0 {
+		t.Error("Key unexpected")
+	}
+	if res.Status != string(ERROR) {
+		t.Error("Status mismatch")
+	}
+	if res.Message != "Failed to parse JSON" {
+		t.Error("Error expected")
+	}
+}

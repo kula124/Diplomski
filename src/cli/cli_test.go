@@ -188,19 +188,6 @@ func TestConfigPlusCLI(t *testing.T) {
 	}
 }
 
-func TestRequiredWith(t *testing.T) {
-	// SETUP
-	args := []string{"-d", "key"}
-	// TEST
-	_, err := ParseCLIArgs(args)
-	if err == nil {
-		t.Error("error expected")
-	}
-	if err.Error() != "Key: flag --key is required when using -d" {
-		t.Error("unexpected error occurred")
-	}
-}
-
 func TestDeleteFlag(t *testing.T) {
 	// SETUP
 	args := []string{"-e", "-del"}
@@ -272,6 +259,32 @@ func TestBasics(t *testing.T) {
 	}
 }
 
+func TestDecryptionHash(t *testing.T) {
+	// SETUP
+	args := []string{"-e", "--dh", "decryptionHash"}
+	// TEST
+	s, e := ParseCLIArgs(args)
+	if e != nil {
+		t.Error(e)
+	}
+	if s.DecryptionHash != "decryptionHash" {
+		t.Error("decryption hash not set")
+	}
+}
+
+func TestPaidStatus(t *testing.T) {
+	// SETUP
+	args := []string{"-e", "-p"}
+	// TEST
+	s, e := ParseCLIArgs(args)
+	if e != nil {
+		t.Error(e)
+	}
+	if !s.PaidStatus {
+		t.Error("Paid status not set")
+	}
+}
+
 func TestDefaults(t *testing.T) {
 	// SETUP
 	args := []string{"-e"}
@@ -324,5 +337,11 @@ func TestDefaults(t *testing.T) {
 	}
 	if s.ReplaceOriginal {
 		t.Error("Replace original")
+	}
+	if s.PaidStatus {
+		t.Error("Paid")
+	}
+	if len(s.DecryptionHash) > 0 {
+		t.Error("Hash")
 	}
 }

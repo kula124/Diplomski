@@ -1,0 +1,28 @@
+[PEM_FAILED]
+msg = "failed to parse PEM block containing the public key"
+code = 100
+[RANSOM_NOT_PAID]
+msg = "ransom not paid"
+code = 101
+[CNC_DOWN]
+msg = "failed to contact CnC server"
+code = 102
+[JSON]
+msg = "failed to parse JSON"
+code = 103
+[MISSING_REQUIRED]
+msg = "%v is required!"
+code = 200
+[MULTIPLE_REQUIRED_IN_ONE_KEY]
+msg = "%v can't require multiple flags in one key"
+code = 201
+[MULTIPLE_REQUIRED_FLAGS]
+msg = "%v: only one flag is required"
+code = 202
+[MISSING_VALUE_FROM_PARAMETER]
+msg = "%v: missing value for parameter"
+code = 203
+[REQUIRED_WITH]
+msg = "%v:  flag %s is required when using %s"
+code = 204
+

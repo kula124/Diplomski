@@ -4,6 +4,12 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/hex"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -98,6 +104,32 @@ func DecryptFile(encryptedFilename string, key []byte) (filename string, er erro
 	return filename, nil
 }
 
+func EncryptWithRSAPublicKey(plainData []byte, RSAPublicKeyString string) (string, error) {
+
+	// ----- Converting RSA Public key string to Public key object [ start ] -----
+	block, _ := pem.Decode([]byte(RSAPublicKeyString))
+	if block == nil {
+		return "", errors.New("failed to parse PEM block containing the public key")
+	}
+
+	RSAPublicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return "", errors.New("failed to parse DER encoded public key: " + err.Error())
+	}
+	// ----- Converting RSA Public key string to Public key object [ end ] -----
+
+	// encrypting Data
+	randomSource := rand.Reader
+	encryptedDataBytes, err := rsa.EncryptOAEP(sha1.New(), randomSource, RSAPublicKey.(*rsa.PublicKey), plainData, nil)
+	if err != nil {
+		return "", err
+	}
+
+	// hex encoding
+	encryptedData := hex.EncodeToString(encryptedDataBytes)
+	return encryptedData, nil
+}
+
 func GetFilesInCurrentDir(fileFormats string, dirPath string, recursive bool) []string {
 	filePaths := []string{}
 	absDirPath, err := filepath.Abs(dirPath)
@@ -165,4 +197,11 @@ func getDirectoriesInPath(path string) []string {
 		}
 	}
 	return dirs
+}
+
+func GetHash(data []byte) string {
+	sha := sha256.New()
+	sha.Write(data)
+	keyHash := sha.Sum(nil)
+	return hex.EncodeToString(keyHash)
 }
