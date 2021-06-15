@@ -92,6 +92,14 @@ var cliArgs = []CommandLineArg{
 		settingsField: "Key",
 	},
 	{
+		name: "Encrypted ext",
+		info: CommandLineArgInfo{description: "ext of encrypted files", required: Optional, isBool: false, defaultFlag: "kc"},
+		flags: []CommandLineFlag{
+			{flag: "--ee", description: "ext appended to files after encryption"},
+		},
+		settingsField: "EncryptedFileExt",
+	},
+	{
 		name: "File Formats",
 		info: CommandLineArgInfo{description: "File formats to target by encryption", metaValue: ",", isBool: false, required: Optional, defaultFlag: "txt"},
 		flags: []CommandLineFlag{

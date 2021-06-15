@@ -15,6 +15,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"main/src/cli"
 	"path/filepath"
 	"strings"
 )
@@ -82,7 +83,7 @@ func EncryptFile(fileName string, newFileName string, key []byte) (newFleName st
 	}
 
 	if len(newFileName) == 0 {
-		newFileName = fileName + ".wc"
+		newFileName = fileName + "." + cli.Settings.EncryptedFileExt
 	}
 	chipertext := Encrypt(plaintext, key)
 	ioutil.WriteFile(newFileName, chipertext, 0777)
@@ -90,7 +91,7 @@ func EncryptFile(fileName string, newFileName string, key []byte) (newFleName st
 }
 
 func DecryptFile(encryptedFilename string, key []byte) (filename string, er error) {
-	if !strings.HasSuffix(encryptedFilename, ".wc") {
+	if !strings.HasSuffix(encryptedFilename, "."+cli.Settings.EncryptedFileExt) {
 		return "", errors.New("file is not encrypted")
 	}
 	ct, err := ioutil.ReadFile(encryptedFilename)
@@ -99,7 +100,7 @@ func DecryptFile(encryptedFilename string, key []byte) (filename string, er erro
 		return "", err
 	}
 	plaintext := Decrypt(ct, key)
-	filename = strings.Split(encryptedFilename, ".wc")[0]
+	filename = strings.Split(encryptedFilename, "."+cli.Settings.EncryptedFileExt)[0]
 	ioutil.WriteFile(filename, plaintext, 0777)
 	return filename, nil
 }

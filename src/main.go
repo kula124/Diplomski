@@ -36,7 +36,7 @@ func main() {
 		que.Init(files)
 		StartEncryption(&que, settings.Key)
 	case false:
-		files := c.GetFilesInCurrentDir("wc", d, settings.Recursion)
+		files := c.GetFilesInCurrentDir(settings.EncryptedFileExt, d, settings.Recursion)
 		que.Init(files)
 		StartDecryption(&que, settings.Key)
 	}
