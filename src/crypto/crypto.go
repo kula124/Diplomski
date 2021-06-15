@@ -76,21 +76,35 @@ func Decrypt(ciphertext []byte, key []byte) []byte {
 	return plaintext
 }
 
-func EncryptFile(fileName string, newFileName string, key []byte) (newFleName string, err error) {
+func EncryptFile(fileName string, newFileName string, clientPublicKey *rsa.PublicKey) (newFleName string, err error) {
 	plaintext, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	keyBytes := make([]byte, 32)
+	rand.Read(keyBytes)
+	/*if len(cli.Settings.SuppliedAESKey) == 0 {
+		keyBytes = make([]byte, 32)
+		rand.Read(keyBytes)
+	} else {
+		keyBytes, _ = hex.DecodeString(cli.Settings.SuppliedAESKey)
+	}*/
+
 	if len(newFileName) == 0 {
 		newFileName = fileName + "." + cli.Settings.EncryptedFileExt
 	}
-	chipertext := Encrypt(plaintext, key)
-	ioutil.WriteFile(newFileName, chipertext, 0777)
+	chipertext := Encrypt(plaintext, keyBytes)
+	encryptedAESKey, err := rsa.EncryptOAEP(sha1.New(), rand.Reader, clientPublicKey, keyBytes, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	chipertextAndKey := append(chipertext, encryptedAESKey...)
+	ioutil.WriteFile(newFileName, chipertextAndKey, 0777)
 	return newFileName, nil
 }
 
-func DecryptFile(encryptedFilename string, key []byte) (filename string, er error) {
+func DecryptFile(encryptedFilename string, clientPrivateKey *rsa.PrivateKey) (filename string, er error) {
 	if !strings.HasSuffix(encryptedFilename, "."+cli.Settings.EncryptedFileExt) {
 		return "", errors.New("file is not encrypted")
 	}
@@ -99,7 +113,14 @@ func DecryptFile(encryptedFilename string, key []byte) (filename string, er erro
 		log.Fatal(err)
 		return "", err
 	}
-	plaintext := Decrypt(ct, key)
+	encryptedKey := ct[len(ct)-256:]
+	encryptedFile := ct[:len(ct)-256]
+	key, err := rsa.DecryptOAEP(sha1.New(), rand.Reader, clientPrivateKey, encryptedKey, nil)
+	if err != nil {
+		return "", errors.New("failed to decryped AES key")
+	}
+
+	plaintext := Decrypt(encryptedFile, key)
 	filename = strings.Split(encryptedFilename, "."+cli.Settings.EncryptedFileExt)[0]
 	ioutil.WriteFile(filename, plaintext, 0777)
 	return filename, nil

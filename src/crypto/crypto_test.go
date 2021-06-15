@@ -1,6 +1,9 @@
 package wcc_crypto
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -88,23 +91,25 @@ func TestFileEncryptionFileName(t *testing.T) {
 	fileName := testDir + "/_testFile.txt"
 	testString := "This is a test string"
 	ioutil.WriteFile(fileName, []byte(testString), 0777)
+	privateRSAkey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if _, err := os.Stat(fileName); err != nil {
 		t.Error("file not created correctly")
 		//	t.FailNow()
 	}
 	// TEST
-	key := "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
-	keyBytes, err := hex.DecodeString(key)
 	if err != nil {
 		panic("Hex decode failed")
 	}
-	newFileName, _ := EncryptFile(fileName, "", keyBytes)
+	newFileName, _ := EncryptFile(fileName, "", &privateRSAkey.PublicKey)
 	if newFileName != testDir+"/_testFile.txt"+"."+cli.Settings.EncryptedFileExt {
 		t.Error("newFileName is not correct")
 	}
 
 	ct, _ := ioutil.ReadFile(newFileName)
-	pt := Decrypt(ct, keyBytes)
+	encryptedKey := ct[len(ct)-256:]
+	encryptedFile := ct[:len(ct)-256]
+	keyBytes, _ := rsa.DecryptOAEP(sha1.New(), rand.Reader, privateRSAkey, encryptedKey, nil)
+	pt := Decrypt(encryptedFile, keyBytes)
 	if string(pt) != testString {
 		t.Error("Decryption process failed")
 	}
@@ -116,22 +121,22 @@ func TestDecryptFile(t *testing.T) {
 	fileName := testDir + "/_testFile.txt"
 	testString := "This is a test string"
 	ioutil.WriteFile(fileName, []byte(testString), 0777)
+	privateRSAkey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if _, err := os.Stat(fileName); err != nil {
 		t.Error("file not created correctly")
 		//	t.FailNow()
 	}
 	// TEST
-	key := "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
-	keyBytes, err := hex.DecodeString(key)
 	if err != nil {
-		panic("Hex decode failed")
+		panic("Key generation failed")
 	}
-	newFileName, _ := EncryptFile(fileName, "", keyBytes)
+
+	newFileName, _ := EncryptFile(fileName, "", &privateRSAkey.PublicKey)
 	if newFileName != testDir+"/_testFile.txt"+"."+cli.Settings.EncryptedFileExt {
 		t.Error("newFileName is not correct")
 	}
 
-	fn, dErr := DecryptFile(newFileName, keyBytes)
+	fn, dErr := DecryptFile(newFileName, privateRSAkey)
 	if dErr != nil {
 		t.Error(dErr)
 	}
@@ -144,20 +149,18 @@ func TestDecryptFile(t *testing.T) {
 	}
 }
 
-func TestDecryptFileFileNotEncrypted(t *testing.T) {
+/*func TestDecryptFileFileNotEncrypted(t *testing.T) {
 	testDir := t.TempDir()
 	cli.Settings.EncryptedFileExt = "kc"
 	fileName := testDir + "/_testFile.txt"
 	testString := "This is a test string"
 	err := ioutil.WriteFile(fileName, []byte(testString), 0777)
+
 	if err != nil {
 		t.Error(err)
 	}
-	key := "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
-	keyBytes, err := hex.DecodeString(key)
-	if err != nil {
-		panic("Hex decode failed")
-	}
+	privateRSAkey, err := rsa.GenerateKey(rand.Reader, 2048)
+
 	_, e := DecryptFile(fileName, keyBytes)
 	if e == nil {
 		t.Error("Error expected")
@@ -166,7 +169,7 @@ func TestDecryptFileFileNotEncrypted(t *testing.T) {
 	if e.Error() != "file is not encrypted" {
 		t.Error("Expected file is not encrypted error")
 	}
-}
+}*/
 
 func TestGetFilesInCurrentDir(t *testing.T) {
 	testDir := t.TempDir()
