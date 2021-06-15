@@ -14,6 +14,7 @@ import (
 
 func createRecursiveFileHierarchy(t *testing.T) ([]string, string) {
 	testDir := t.TempDir()
+	cli.Settings.EncryptedFileExt = "kc"
 	cli.Settings.LeaveNote = false
 	fileName := testDir + "/_testFile"
 	testString := "This is a test string"
@@ -82,7 +83,7 @@ func TestEncryptionDecryptionScheme(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir("wc", rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
@@ -107,7 +108,7 @@ func TestEncryptionDecryptionSchemeWithDeletion(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir("wc", rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)

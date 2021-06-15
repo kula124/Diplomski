@@ -90,6 +90,21 @@ func TestParseCLIArgsD(t *testing.T) {
 	//TEARDOWN
 }
 
+func TestParseCLIArgsEE(t *testing.T) {
+	// SETUP
+	args := []string{"-e", "--ee", "tst"}
+	// TEST
+	settings, err := ParseCLIArgs(args)
+	if err != nil {
+		t.Error(err)
+	}
+	if settings.EncryptedFileExt != "tst" {
+		t.Errorf("Expected mode tst but got %v", settings.EncryptedFileExt)
+	}
+	t.Logf("Decryption flag set successively")
+	//TEARDOWN
+}
+
 func TestParseCLIArgsUnknownArgs(t *testing.T) {
 	// SETUP
 	args := []string{"-d", "wat", "--key", "key"}
