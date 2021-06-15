@@ -127,7 +127,7 @@ func TestEncryptionDecryptionSchemeWithDeletion(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir("wc", rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
@@ -165,7 +165,7 @@ func TestEncryptionDecryptionSchemeWithDeletionSendOff(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir("wc", rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
