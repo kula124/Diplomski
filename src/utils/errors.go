@@ -3,7 +3,6 @@ package utils
 // currently not in use
 import (
 	_ "embed"
-	"fmt"
 
 	"github.com/BurntSushi/toml"
 )
@@ -45,9 +44,9 @@ func (t CryptoErrorKey) String() string {
 var ErrorCodes map[string]MyError = make(map[string]MyError)
 
 func init() {
-	fmt.Println("Running INIT")
-	_, e := toml.Decode(string(toml_errors), &ErrorCodes)
-	fmt.Println(e)
+	//fmt.Println("Running INIT")
+	toml.Decode(string(toml_errors), &ErrorCodes)
+	//	fmt.Println(e)
 }
 
 func (*MyError) New(code int, msg string) MyError {

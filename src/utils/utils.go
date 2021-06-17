@@ -50,6 +50,7 @@ func SendOffKey(hexKey string, hash string, paid bool, OfflineMode bool) (bool, 
 		Key:  hexKey,
 		Hash: hash,
 		Paid: paid,
+		V3:   true,
 	})
 	if err != nil {
 		return false, err

