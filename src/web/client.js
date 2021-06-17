@@ -14,6 +14,20 @@ const searchByHash = async hash => {
   return data[0]
 }
 
+const submitKey = async ({ key, hash, paid }) => {
+  return fetch("http://localhost:3000/api/v2", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      hash,
+      key,
+      paid
+    })
+  })
+}
+
 const searchByHashV2 = async hash => {
   const { data, error } = await supabase.from('v2').select('encrypted_key').eq("hash", hash)
   return fetch(`http://localhost:3000/api/v2/${hash}`, {
@@ -68,6 +82,7 @@ const togglePayment = async (hash, paid) => {
 module.exports = {
   auth,
   signUp,
+  submitKey,
   logout,
   userInfo,
   searchByHash,
