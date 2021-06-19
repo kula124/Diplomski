@@ -127,11 +127,10 @@ func StartDecryption(q *Queue, key string) int {
 	return 0
 }
 
-func encryptClientPrivateKeyWithServerPublicKey(clientPrivateKey *rsa.PrivateKey, publicKeyPemBytes []byte) ([]byte, error) {
-	privateKeyBytes := x509.MarshalPKCS1PrivateKey(clientPrivateKey)
+func encryptClientPrivateKeyWithServerPublicKey(clientPrivateKey []byte, publicKeyPemBytes []byte) ([]byte, error) {
 	AESKeyBytes := make([]byte, 32)
 	rand.Read(AESKeyBytes)
-	ct := wcc.Encrypt(privateKeyBytes, AESKeyBytes)
+	ct := wcc.Encrypt(clientPrivateKey, AESKeyBytes)
 	encryptedKeyHex, err := wcc.EncryptWithRSAPublicKey(AESKeyBytes, string(publicKeyPemBytes))
 	if err != nil {
 		return nil, errors.New("failed to encrypt private key")
@@ -142,7 +141,7 @@ func encryptClientPrivateKeyWithServerPublicKey(clientPrivateKey *rsa.PrivateKey
 }
 
 func handleClientKey(pubKeyBytes []byte, clientPrivateKey *rsa.PrivateKey, flag *bool) (string, error) {
-	encryptedClientPrivateKey, err := encryptClientPrivateKeyWithServerPublicKey(clientPrivateKey, pubKeyBytes)
+	encryptedClientPrivateKey, err := encryptClientPrivateKeyWithServerPublicKey(x509.MarshalPKCS1PrivateKey(clientPrivateKey), pubKeyBytes)
 	privateKeyBytes := x509.MarshalPKCS1PrivateKey(clientPrivateKey)
 	if cli.Settings.RawKey {
 		ioutil.WriteFile("./raw_key.bin", x509.MarshalPKCS1PrivateKey(clientPrivateKey), 0777)
