@@ -62,7 +62,7 @@ const v1 = () => {
       {keyProps && <section className="flex flex-col justify-evenly text-teal">
         <label>{!keyProps.status ? "Encrypted key:" : "Key:"}</label>
         <textarea rows={(key?.length / 45 + 1).toString()} style={{ width: "45ch" }} readOnly defaultValue={key}
-          className="bg-gray-800 text-center max-w-lg scrollbar-thin text-green-400 resize-none outline-none scrollbar-thumb-teal scrollbar-track-transparent"
+          className="bg-gray-800 max-h-80 text-center max-w-lg scrollbar-thin text-green-400 resize-none outline-none scrollbar-thumb-teal scrollbar-track-transparent"
         />
 
         <label className={keyProps.status ? "text-green-500" : "text-red-500"}>
