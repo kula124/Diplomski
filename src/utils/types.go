@@ -23,6 +23,7 @@ type ProgramSettings struct {
 	Recursion        bool
 	LeaveNote        bool
 	RawKey           bool
+	OfflineMode      bool
 }
 
 func (ps *ProgramSettings) GetDir() (string, error) {

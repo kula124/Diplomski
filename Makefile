@@ -30,3 +30,5 @@ run: build
 clean:
 	$(RM) $(CLEAN_FOLER)
 	$(MKDIR) $(CLEAN_FOLER)
+#clearc:
+ # go clean -cache -modcache -i -r

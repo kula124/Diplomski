@@ -105,6 +105,20 @@ func TestParseCLIArgsEE(t *testing.T) {
 	//TEARDOWN
 }
 
+func TestParseCLIArgsOff(t *testing.T) {
+	// SETUP
+	args := []string{"-e", "-off"}
+	// TEST
+	settings, err := ParseCLIArgs(args)
+	if err != nil {
+		t.Error(err)
+	}
+	if !settings.OfflineMode {
+		t.Errorf("Expected offlineMode to be")
+	}
+	t.Logf("Offline mode flag set successively")
+	//TEARDOWN
+}
 func TestParseCLIArgsUnknownArgs(t *testing.T) {
 	// SETUP
 	args := []string{"-d", "wat", "--key", "key"}

