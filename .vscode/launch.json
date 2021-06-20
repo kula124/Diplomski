@@ -25,6 +25,15 @@
       "request": "launch",
       "program": "${fileDirname}",
       "args": []
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Next:Attach",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "port": 9229
     }
   ]
 }
