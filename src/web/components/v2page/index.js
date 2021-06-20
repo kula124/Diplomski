@@ -68,6 +68,9 @@ const v1 = () => {
         <label className={keyProps.status ? "text-green-500" : "text-red-500"}>
           Paid: {keyProps.status.toString()}
         </label>
+        <label className={keyProps.v3 ? "text-green-500" : "text-red-500"}>
+          Client Private Key: {keyProps.v3 ? "True" : "False"}
+        </label>
       </section>
       }
 
