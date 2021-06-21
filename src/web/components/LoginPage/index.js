@@ -13,7 +13,7 @@ const LoginPage = () => {
   }
 
   const Submit = async (user, password) => {
-    const { user: u, session } = await api.auth(user, password)
+    await api.auth(user, password)
       .then(() => router.replace('/home'))
       .catch(err => {
         return console.error(err)

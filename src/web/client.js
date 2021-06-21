@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://amsvkdzwcxmodmgaktiq.supabase.co'
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY
+const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE}:${process.env.NEXT_PUBLIC_API_PORT}`
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
@@ -15,7 +16,7 @@ const searchByHash = async hash => {
 }
 
 const submitKey = async ({ key, hash, paid }) => {
-  return fetch("http://localhost:3000/api/v2", {
+  return fetch(`${API_BASE}/api/v2`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -30,7 +31,7 @@ const submitKey = async ({ key, hash, paid }) => {
 
 const searchByHashV2 = async hash => {
   const { data, error } = await supabase.from('v2').select('encrypted_key').eq("hash", hash)
-  return fetch(`http://localhost:3000/api/v2/${hash}`, {
+  return fetch(`${API_BASE}/api/v2/${hash}`, {
     headers: {
       "Content-Type": "application/json",
     }

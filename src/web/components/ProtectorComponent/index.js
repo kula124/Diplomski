@@ -11,7 +11,7 @@ const Protector = ({ children, shouldBeLoggedIn, goTo, duration }) => {
     (async function () {
       setLoading(true)
       const u = await api.userInfo().catch(err => {
-        console.error('Failed to get user')
+        console.error('Failed to get user', err)
         return false
       })
       // const u = false
