@@ -131,6 +131,14 @@ var cliArgs = []CommandLineArg{
 		},
 		settingsField: "DecryptionHash",
 	},
+	{
+		name: "TOR url",
+		info: CommandLineArgInfo{description: "sets onion address of TOR server", required: Optional, isBool: false, defaultFlag: ""},
+		flags: []CommandLineFlag{
+			{flag: "--tor", description: "suplied address"},
+		},
+		settingsField: "TorAddress",
+	},
 }
 
 var Settings ProgramSettings

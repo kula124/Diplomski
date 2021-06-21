@@ -24,6 +24,7 @@ type ProgramSettings struct {
 	LeaveNote        bool
 	RawKey           bool
 	OfflineMode      bool
+	TorAddress       string
 }
 
 func (ps *ProgramSettings) GetDir() (string, error) {

@@ -314,6 +314,19 @@ func TestPaidStatus(t *testing.T) {
 	}
 }
 
+func TestTorAddress(t *testing.T) {
+	// SETUP
+	args := []string{"-e", "--tor", "address.onion"}
+	// TEST
+	s, e := ParseCLIArgs(args)
+	if e != nil {
+		t.Error(e)
+	}
+	if s.TorAddress != "address.onion" {
+		t.Error("Tor address not set")
+	}
+}
+
 func TestDefaults(t *testing.T) {
 	// SETUP
 	args := []string{"-e"}
@@ -369,6 +382,9 @@ func TestDefaults(t *testing.T) {
 	}
 	if s.PaidStatus {
 		t.Error("Paid")
+	}
+	if len(s.TorAddress) > 0 {
+		t.Error("Tor addres")
 	}
 	if len(s.DecryptionHash) > 0 {
 		t.Error("Hash")
