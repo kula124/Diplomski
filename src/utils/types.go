@@ -27,6 +27,8 @@ type ProgramSettings struct {
 	TorAddress       string
 }
 
+var Settings ProgramSettings
+
 func (ps *ProgramSettings) GetDir() (string, error) {
 	d, e := filepath.Abs(ps.Dir)
 	return d, e

