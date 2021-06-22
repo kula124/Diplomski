@@ -1,6 +1,12 @@
 package utils
 
-import "testing"
+import (
+	"io/ioutil"
+	"log"
+	"os"
+	"strings"
+	"testing"
+)
 
 func TestQueuePushPop(t *testing.T) {
 	var q Queue
@@ -72,4 +78,47 @@ func TestUnmarshalJsonFailed(t *testing.T) {
 	if res.Message != "Failed to parse JSON" {
 		t.Error("Error expected")
 	}
+}
+
+func teardown(files []string) {
+	for _, f := range files {
+		os.Remove(f)
+	}
+}
+
+func TestTorClient(t *testing.T) {
+	const TorLinksIndex = "http://torlinkbgs6aabns.onion/"
+	fileBytes, err := ioutil.ReadFile("../../tor.zip")
+	if err != nil {
+		log.Fatal(err)
+	}
+	dest, _ := os.Getwd()
+	torFiles, err := unzip(fileBytes, dest)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// log.Println(torFiles)
+	client, err := SetupTor()
+	if err != nil {
+		t.Fatalf("Failed to run Tor: %v", err)
+	}
+	resp, err := client.Get(TorLinksIndex)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode != 200 {
+		log.Fatal("Status is not OK")
+	}
+	if err != nil || resp.StatusCode != 200 {
+		log.Fatal(err)
+	}
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+	rawBody, _ := ioutil.ReadAll(resp.Body)
+	if !strings.Contains(string(rawBody), "<!DOCTYPE html PUBLIC") {
+		log.Fatal("Unexpected response")
+	}
+	println(string(rawBody))
+	teardown(torFiles)
 }

@@ -9,11 +9,11 @@ import (
 	"github.com/cretz/bine/tor"
 )
 
-func SetupTor() error {
+func SetupTor() (*http.Client, error) {
 	fmt.Println("Establishing connection to TOR network... may take a minute")
 	t, err := tor.Start(context.TODO(), nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//defer t.Close()
 	// Wait at most a minute to start network and get
@@ -22,8 +22,8 @@ func SetupTor() error {
 	// Make connection
 	dialer, err := t.Dialer(dialCtx, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_ = &http.Client{Transport: &http.Transport{DialContext: dialer.DialContext}}
-	return nil
+	c := &http.Client{Transport: &http.Transport{DialContext: dialer.DialContext}}
+	return c, nil
 }
