@@ -34,7 +34,7 @@ services:
             PT0gZWQyNTUxOXYxLXNlY3JldDogdHlwZTAgPT0AAACArobDQYyZAWXei4QZwr++
             j96H1X/gq14NwLRZ2O5DXuL0EzYKkdhZSILY85q+kfwZH8z4ceqe7u1F+0pQi/sM
   again:
-    image: kula00/cnc-web
+    image: kula00/cnc-web-v3
     ports:
       ["3000:3000"]
     environment:
