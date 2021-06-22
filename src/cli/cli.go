@@ -151,7 +151,7 @@ var cliArgs = []CommandLineArg{
 	},
 }
 
-var Settings ProgramSettings
+//var Settings ProgramSettings
 
 func ParseCLIArgs(args []string) (ProgramSettings, error) {
 	var er error

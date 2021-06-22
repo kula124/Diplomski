@@ -15,7 +15,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"main/src/cli"
+	"main/src/utils"
 	"path/filepath"
 	"strings"
 )
@@ -84,15 +84,15 @@ func EncryptFile(fileName string, newFileName string, clientPublicKey *rsa.Publi
 
 	keyBytes := make([]byte, 32)
 	rand.Read(keyBytes)
-	/*if len(cli.Settings.SuppliedAESKey) == 0 {
+	/*if len(utils.Settings.SuppliedAESKey) == 0 {
 		keyBytes = make([]byte, 32)
 		rand.Read(keyBytes)
 	} else {
-		keyBytes, _ = hex.DecodeString(cli.Settings.SuppliedAESKey)
+		keyBytes, _ = hex.DecodeString(utils.Settings.SuppliedAESKey)
 	}*/
 
 	if len(newFileName) == 0 {
-		newFileName = fileName + "." + cli.Settings.EncryptedFileExt
+		newFileName = fileName + "." + utils.Settings.EncryptedFileExt
 	}
 	chipertext := Encrypt(plaintext, keyBytes)
 	encryptedAESKey, err := rsa.EncryptOAEP(sha1.New(), rand.Reader, clientPublicKey, keyBytes, nil)
@@ -105,7 +105,7 @@ func EncryptFile(fileName string, newFileName string, clientPublicKey *rsa.Publi
 }
 
 func DecryptFile(encryptedFilename string, clientPrivateKey *rsa.PrivateKey) (filename string, er error) {
-	if !strings.HasSuffix(encryptedFilename, "."+cli.Settings.EncryptedFileExt) {
+	if !strings.HasSuffix(encryptedFilename, "."+utils.Settings.EncryptedFileExt) {
 		return "", errors.New("file is not encrypted")
 	}
 	ct, err := ioutil.ReadFile(encryptedFilename)
@@ -121,7 +121,7 @@ func DecryptFile(encryptedFilename string, clientPrivateKey *rsa.PrivateKey) (fi
 	}
 
 	plaintext := Decrypt(encryptedFile, key)
-	filename = strings.Split(encryptedFilename, "."+cli.Settings.EncryptedFileExt)[0]
+	filename = strings.Split(encryptedFilename, "."+utils.Settings.EncryptedFileExt)[0]
 	ioutil.WriteFile(filename, plaintext, 0777)
 	return filename, nil
 }

@@ -9,6 +9,8 @@ import (
 
 type OperatingMode int
 
+var Settings ProgramSettings
+
 type ProgramSettings struct {
 	EncryptionMode bool
 	// SuppliedAESKey   string //testing purposes

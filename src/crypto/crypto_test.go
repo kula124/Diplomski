@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"main/src/cli"
+	"main/src/utils"
 	"os"
 	"path"
 	"testing"
@@ -15,7 +15,7 @@ import (
 
 func createRecursiveFileHierarchy(t *testing.T) []string {
 	testDir := t.TempDir()
-	cli.Settings.EncryptedFileExt = "kc"
+	utils.Settings.EncryptedFileExt = "kc"
 	fileName := testDir + "/_testFile"
 	testString := "This is a test string"
 	c := 3
@@ -101,7 +101,7 @@ func TestFileEncryptionFileName(t *testing.T) {
 		panic("Hex decode failed")
 	}
 	newFileName, _ := EncryptFile(fileName, "", &privateRSAkey.PublicKey)
-	if newFileName != testDir+"/_testFile.txt"+"."+cli.Settings.EncryptedFileExt {
+	if newFileName != testDir+"/_testFile.txt"+"."+utils.Settings.EncryptedFileExt {
 		t.Error("newFileName is not correct")
 	}
 
@@ -117,7 +117,7 @@ func TestFileEncryptionFileName(t *testing.T) {
 
 func TestDecryptFile(t *testing.T) {
 	testDir := t.TempDir()
-	cli.Settings.EncryptedFileExt = "kc"
+	utils.Settings.EncryptedFileExt = "kc"
 	fileName := testDir + "/_testFile.txt"
 	testString := "This is a test string"
 	ioutil.WriteFile(fileName, []byte(testString), 0777)
@@ -132,7 +132,7 @@ func TestDecryptFile(t *testing.T) {
 	}
 
 	newFileName, _ := EncryptFile(fileName, "", &privateRSAkey.PublicKey)
-	if newFileName != testDir+"/_testFile.txt"+"."+cli.Settings.EncryptedFileExt {
+	if newFileName != testDir+"/_testFile.txt"+"."+utils.Settings.EncryptedFileExt {
 		t.Error("newFileName is not correct")
 	}
 
@@ -151,7 +151,7 @@ func TestDecryptFile(t *testing.T) {
 
 /*func TestDecryptFileFileNotEncrypted(t *testing.T) {
 	testDir := t.TempDir()
-	cli.Settings.EncryptedFileExt = "kc"
+	utils.Settings.EncryptedFileExt = "kc"
 	fileName := testDir + "/_testFile.txt"
 	testString := "This is a test string"
 	err := ioutil.WriteFile(fileName, []byte(testString), 0777)
@@ -173,7 +173,7 @@ func TestDecryptFile(t *testing.T) {
 
 func TestGetFilesInCurrentDir(t *testing.T) {
 	testDir := t.TempDir()
-	cli.Settings.EncryptedFileExt = "kc"
+	utils.Settings.EncryptedFileExt = "kc"
 	fileName := testDir + "/_testFile"
 	testString := "This is a test string"
 	c := 3
@@ -220,7 +220,7 @@ func TestGetFilesInCurrentDir(t *testing.T) {
 
 func TestGetFilesInCurrentDirRecursive(t *testing.T) {
 	testDir := t.TempDir()
-	cli.Settings.EncryptedFileExt = "kc"
+	utils.Settings.EncryptedFileExt = "kc"
 	fileName := testDir + "/_testFile"
 	testString := "This is a test string"
 	c := 3
