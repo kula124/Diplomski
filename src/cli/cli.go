@@ -14,10 +14,11 @@ import (
 
 //go:embed public.pem
 var publicKeyBytes []byte
-var publicKeyHexString string
 
-func init() {
-	publicKeyHexString = hex.EncodeToString(publicKeyBytes)
+func init_settings() {
+	if len(Settings.Key) == 0 {
+		Settings.Key = hex.EncodeToString(publicKeyBytes)
+	}
 }
 
 type CommandLineArg struct {
@@ -103,7 +104,7 @@ var cliArgs = []CommandLineArg{
 	{
 		name: "Key",
 		info: CommandLineArgInfo{description: "Supplied symmetric key", required: Optional, isBool: false,
-			defaultFlag: publicKeyHexString},
+			defaultFlag: ""},
 		flags: []CommandLineFlag{
 			{flag: "--key", description: "Public key of the server, hardcoded by default"},
 		},
@@ -172,6 +173,7 @@ func ParseCLIArgs(args []string) (ProgramSettings, error) {
 	sort.Slice(cliArgs, func(i, j int) bool {
 		return cliArgs[i].info.required > cliArgs[j].info.required
 	})
+	init_settings()
 
 	for _, v := range cliArgs {
 		er = parseParameter(v, &argsPtr)

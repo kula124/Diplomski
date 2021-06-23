@@ -11,7 +11,6 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -154,7 +153,7 @@ func EncryptWithRSAPublicKey(plainData []byte, RSAPublicKeyString string) (strin
 
 func GetFilesInCurrentDir(fileFormats string, dirPath string, recursive bool) []string {
 	filePaths := []string{}
-	absDirPath, err := filepath.Abs(dirPath)
+	_, err := filepath.Abs(dirPath)
 	if recursive {
 		subdirs := getDirectoriesInPath(dirPath)
 		if len(subdirs) != 0 {
@@ -170,7 +169,7 @@ func GetFilesInCurrentDir(fileFormats string, dirPath string, recursive bool) []
 	if err != nil {
 		log.Fatal("Directory path invalid")
 	}
-	fmt.Printf("Encryption in %v directory \n", absDirPath)
+	// fmt.Printf("Encryption in %v directory \n", absDirPath)
 	allFiles, err := ioutil.ReadDir(dirPath)
 	if !strings.HasSuffix(dirPath, "/") {
 		dirPath = dirPath + "/"

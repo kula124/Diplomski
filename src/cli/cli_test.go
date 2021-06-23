@@ -371,7 +371,7 @@ func TestDefaults(t *testing.T) {
 		t.Error("File Format")
 	}
 
-	if len(s.Key) != 0 {
+	if len(s.Key) == 0 {
 		t.Error("Key")
 	}
 	if s.Recursion {
