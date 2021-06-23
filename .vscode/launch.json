@@ -19,6 +19,21 @@
       ]
     },
     {
+      "name": "Debug:Tor",
+      "type": "go",
+      "mode": "debug",
+      "request": "launch",
+      "program": "${fileDirname}",
+      "args": [
+        "-e",
+        "--dir",
+        "../bin",
+        "-note",
+        "--tor",
+        "http://xwjtp3mj427zdp4tljiiivg2l5ijfvmt5lcsfaygtpp6cw254kykvpyd.onion:88"
+      ]
+    },
+    {
       "name": "Debug (no args)",
       "type": "go",
       "mode": "debug",

@@ -15,17 +15,19 @@ else
 endif
 
 test:
-	go test .\src\cli
-	go test .\src\crypto
-	go test .\src\utils
-	go test .\src\config
-	go test .\src\
+	go test -v  .\src\cli
+	go test -v .\src\crypto
+	go test -v .\src\utils
+	go test -v .\src\config
+	go test -v .\src\
 
 build: test
 	go build -o $(OUTPUT_BIN) $(MAIN_FILE)
 
 run: build
 	$(OUTPUT_BIN) $(ARGS)
+exec:
+	${OUTPUT_BIN} ${ARGS}
 
 clean:
 	$(RM) $(CLEAN_FOLER)
