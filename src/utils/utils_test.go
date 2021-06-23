@@ -87,18 +87,22 @@ func teardown(files []string) {
 }
 
 func TestTorClient(t *testing.T) {
-	const TorLinksIndex = "http://torlinkbgs6aabns.onion/"
-	fileBytes, err := ioutil.ReadFile("../../tor.zip")
+	t.Skip()
+	const TorLinksIndex = "http://zqktlwiuavvvqqt4ybvgvi7tyo4hjl5xgfuvpdf6otjiycgwqbym2qad.onion/wiki/index.php/Main_Page"
+	fileBytes, err := ioutil.ReadFile("./tor.zip")
 	if err != nil {
 		log.Fatal(err)
 	}
 	dest, _ := os.Getwd()
-	torFiles, err := unzip(fileBytes, dest)
+	dest = dest + "/tor"
+	torFiles, err := Unzip(fileBytes, dest)
 	if err != nil {
 		log.Fatal(err)
 	}
+	os.Chdir(dest)
 	// log.Println(torFiles)
-	client, err := SetupTor()
+	tor, client, err := SetupTor(nil)
+	defer tor.Close()
 	if err != nil {
 		t.Fatalf("Failed to run Tor: %v", err)
 	}
@@ -116,9 +120,9 @@ func TestTorClient(t *testing.T) {
 		defer resp.Body.Close()
 	}
 	rawBody, _ := ioutil.ReadAll(resp.Body)
+	println(string(rawBody))
 	if !strings.Contains(string(rawBody), "<!DOCTYPE html PUBLIC") {
 		log.Fatal("Unexpected response")
 	}
-	println(string(rawBody))
 	teardown(torFiles)
 }

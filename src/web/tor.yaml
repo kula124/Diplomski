@@ -38,6 +38,6 @@ services:
     ports:
       ["3000:3000"]
     environment:
-      NEXT_PUBLIC_API_BASE: http://mmn5gpyapnjatgtq.onion
-      NEXT_PUBLIC_API_PORT: 80
+      NEXT_PUBLIC_API_BASE: http://xwjtp3mj427zdp4tljiiivg2l5ijfvmt5lcsfaygtpp6cw254kykvpyd.onion
+      NEXT_PUBLIC_API_PORT: 88
     hostname: again
