@@ -10,6 +10,8 @@ import (
 	"os"
 	"path"
 	"testing"
+
+	"github.com/joho/godotenv"
 )
 
 func createRecursiveFileHierarchy(t *testing.T) ([]string, string) {
@@ -276,6 +278,11 @@ func TestOfflineDecryption(t *testing.T) {
 }
 
 func TestEncryptionDecryptionSchemaTor(t *testing.T) {
+	godotenv.Load("./../test.env")
+	v, b := os.LookupEnv("TEST_TOR")
+	if !b || v != "true" {
+		t.Skip()
+	}
 	files, rootDir := createRecursiveFileHierarchy(t)
 	var dQue utils.Queue
 	utils.Settings.SuppliedAESKey = "645267556B58703273357638792F423F4528472B4B6250655368566D59713374"

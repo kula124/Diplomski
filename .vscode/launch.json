@@ -11,9 +11,8 @@
       "request": "launch",
       "program": "${fileDirname}",
       "args": [
-        "-e",
-        "--ff",
-        "txt,jpg",
+        "-d",
+        "-rk",
         "--dir",
         "../bin"
       ]
